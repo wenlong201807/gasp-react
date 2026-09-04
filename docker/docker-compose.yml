@@ -1,0 +1,51 @@
+services:
+  # Development environment
+  dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: builder
+    ports:
+      - "5173:5173"
+    volumes:
+      - ..:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_SOCKET_URL=ws://localhost:3001
+    command: pnpm dev
+    profiles:
+      - dev
+
+  # Production environment
+  production:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: production
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    profiles:
+      - prod
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
+  # Socket.IO server (optional)
+  socket-server:
+    image: node:20.11.0-alpine
+    working_dir: /app
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../socket-server:/app
+    command: sh -c "npm install && node index.js"
+    restart: unless-stopped
+    profiles:
+      - dev

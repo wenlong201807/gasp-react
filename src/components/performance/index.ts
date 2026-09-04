@@ -1,0 +1,1 @@
+export { WebVitalsPanel } from './WebVitalsPanel';
