@@ -43,7 +43,7 @@ export function FiberTodoPage() {
 
   const accRef = useRef<Partial<PipelineRecord>>({});
   const t0Ref = useRef(0);
-  const intentRef = useRef<FlipIntent>({ exitIds: new Set(), enterIds: new Set(), changeIds: new Set() });
+  const intentRef = useRef<FlipIntent>({ exitIds: new Set(), hideIds: new Set(), enterIds: new Set(), changeIds: new Set() });
   const windowOpenRef = useRef(false);
   /** 当前打开的统计窗口所属的操作轮次（= version）；迟到回调据此丢弃 */
   const activeRoundRef = useRef(0);
@@ -53,7 +53,7 @@ export function FiberTodoPage() {
   /** 统计窗口内的可见列表：过滤命中的 + 正在离场的（保持挂载以播完坍缩动画） */
   const listTodos = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return todos.filter((t) => t.exiting || q === '' || t.text.toLowerCase().includes(q));
+    return todos.filter((t) => t.exiting || t.hidden || q === '' || t.text.toLowerCase().includes(q));
   }, [todos, query]);
 
   /** 关窗出数：汇总一条流水线记录（轮次不符 = 迟到回调，直接丢弃） */
@@ -117,7 +117,7 @@ export function FiberTodoPage() {
       activeRoundRef.current = round;
       t0Ref.current = performance.now();
       accRef.current = { seq, op };
-      intentRef.current = { exitIds: new Set(), enterIds: new Set(), changeIds: new Set() };
+      intentRef.current = { exitIds: new Set(), hideIds: new Set(), enterIds: new Set(), changeIds: new Set() };
       commitsRef.current = [];
       openWindow();
       startFrames();
@@ -135,6 +135,7 @@ export function FiberTodoPage() {
     (round: number, stats: FlipStats) => {
       if (round !== activeRoundRef.current) return; // 被打断轮次的迟到回调，丢弃
       // 无 exiting 时返回原引用，React bail out，不产生多余 commit
+      // hidden 项不属于清理对象（由筛选恢复）
       setTodos((prev) => (prev.some((t) => t.exiting) ? prev.filter((t) => !t.exiting) : prev));
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
@@ -229,14 +230,13 @@ export function FiberTodoPage() {
     const next = todos.map((t) => {
       const match = q.trim() === '' || t.text.toLowerCase().includes(lower);
       if (!match) {
-        // 遗留的 exiting 项也登记本轮意图：动画侧 exited 才能与清理 commit 的
-        // 真实移除对齐，且坍缩 tween 会从冻结态续播到 0
-        intentRef.current.exitIds.add(t.id);
-        if (!t.exiting) return { ...t, exiting: true };
+        // 隐藏（非删除）：坍缩保留在 DOM，恢复时展开；不计 exited（节点未移除）
+        intentRef.current.hideIds.add(t.id);
+        return t.hidden ? t : { ...t, hidden: true };
       }
-      if (match && t.exiting) {
+      if (t.hidden) {
         intentRef.current.enterIds.add(t.id);
-        return { ...t, exiting: false };
+        return { ...t, hidden: false };
       }
       return t;
     });

@@ -122,15 +122,17 @@ export function useFlipList() {
         onComplete: done,
       });
 
-      // 离场：高度坍缩 + 淡出（其余项随布局连续上移）
-      const exitingEls = [...intent.exitIds]
+      // 离场/隐藏：高度坍缩 + 淡出（其余项随布局连续上移）。
+      // exited 计数只含 exitIds（真移除）；hideIds 是筛选隐藏（节点保留，不计）
+      const leavingIds = new Set([...intent.exitIds, ...intent.hideIds]);
+      const leavingEls = [...leavingIds]
         .map(findByTodoId)
         .filter((el): el is HTMLElement => el !== null);
-      if (exitingEls.length > 0) {
+      if (leavingEls.length > 0) {
         pending += 1;
         // 0.3s 必须短于 Flip 的 0.4s：Flip 结束恢复文档流时坍缩须已完成，
         // 否则清理 commit 移除节点时兄弟节点会跳动。
-        const exitTween = gsap.to(exitingEls, {
+        const exitTween = gsap.to(leavingEls, {
           opacity: 0,
           scale: 0.85,
           height: 0,

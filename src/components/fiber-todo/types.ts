@@ -3,6 +3,7 @@ export interface Todo {
   text: string;
   done: boolean;
   exiting?: boolean;
+  hidden?: boolean; // 筛选隐藏：坍缩保留在 DOM，恢复时展开
 }
 
 /** key 策略：id = 稳定 key（Fiber 复用 + DOM 真实移动）；index = 位置 key（内容原地变） */
@@ -48,6 +49,7 @@ export interface PipelineRecord {
 /** 一次操作携带的动画意图（由页面在操作时计算，commit 后由 TodoList 消费） */
 export interface FlipIntent {
   exitIds: Set<string>; // 本轮离场（DOM 保留坍缩，动画后清理 commit 移除）
+  hideIds: Set<string>; // 筛选隐藏（坍缩动画但不计 exited——节点未从 DOM 移除）
   enterIds: Set<string>; // filter 恢复展开的项
   changeIds: Set<string>; // 内容变化高亮
 }
