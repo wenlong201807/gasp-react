@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { gsap } from '@/utils/gsap';
 import type { FrameStats } from './types';
 
@@ -31,11 +31,11 @@ export function useFrameStats() {
     return () => gsap.ticker.remove(tick);
   }, []);
 
-  const start = () => {
+  const start = useCallback(() => {
     samplingRef.current = { count: 0, sum: 0, max: 0, jank: 0 };
-  };
+  }, []);
 
-  const stop = (): FrameStats | null => {
+  const stop = useCallback((): FrameStats | null => {
     const s = samplingRef.current;
     samplingRef.current = null;
     if (!s || s.count === 0) return null;
@@ -45,7 +45,7 @@ export function useFrameStats() {
       maxMs: Math.round(s.max * 100) / 100,
       jankCount: s.jank,
     };
-  };
+  }, []);
 
   return { start, stop };
 }
