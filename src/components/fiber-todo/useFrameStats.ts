@@ -24,6 +24,8 @@ export function useFrameStats() {
       s.sum += deltaTime;
       if (deltaTime > s.max) s.max = deltaTime;
       if (deltaTime > 32) s.jank += 1;
+      // 注：gsap lagSmoothing(500, 33) 会把 >500ms 的长冻结钳到约 33ms，
+      // maxMs 不反映真实冻结时长；jankCount 判定（>32ms）不受影响。
     };
     gsap.ticker.add(tick);
     return () => gsap.ticker.remove(tick);

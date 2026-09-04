@@ -19,6 +19,10 @@ export interface MutationWindowResult {
  * 监听容器内真实 DOM 变更，按"操作窗口"聚合。
  * open() 开窗 → React commit 的变更流入 → close() 关窗返回统计。
  * 折算规则：窗口内加了又删 = 未发生；先删后加同一节点 = moved。
+ *
+ * 时序契约：MutationObserver 回调是微任务，关窗必须晚于 commit 后的微任务投递。
+ * 页面层在动画 onComplete + 2 rAF 后关窗，天然满足；style 属性已被
+ * attributeFilter 排除，GSAP 动画期间的 inline style 写入不会污染统计。
  */
 export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) {
   const currentRef = useRef<MutationWindow | null>(null);
@@ -49,6 +53,7 @@ export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) 
       subtree: true,
       characterData: true,
       attributes: true,
+      attributeFilter: ['class', 'data-todo-id'],
     });
 
     return () => observer.disconnect();

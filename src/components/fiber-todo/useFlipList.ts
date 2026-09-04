@@ -14,10 +14,13 @@ export function useFlipList() {
   const stateRef = useRef<Flip.FlipState | null>(null);
   const rectsRef = useRef<Map<string, DOMRect>>(new Map());
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+  const sideTweensRef = useRef<gsap.core.Tween[]>([]);
 
   useEffect(() => {
     return () => {
       tlRef.current?.kill();
+      for (const tw of sideTweensRef.current) tw.kill();
+      sideTweensRef.current = [];
     };
   }, []);
 
@@ -34,7 +37,11 @@ export function useFlipList() {
     document.querySelector<HTMLElement>(`${ITEM_SELECTOR}[data-todo-id="${id}"]`);
 
   const capture = useCallback(() => {
-    tlRef.current?.kill(); // 中断上一轮：Flip 的内建中断语义
+    // 中断在飞的旁路动画（高亮/展开/离场坍缩）。Flip 主 timeline 不裸 kill：
+    // Flip.getState 自带的 interrupt 会在下一次 Flip.from 时接管并应用终态。
+    // 被中断轮的 onComplete 会被丢弃，由页面层的 2s 超时兜底回收窗口。
+    for (const tw of sideTweensRef.current) tw.kill();
+    sideTweensRef.current = [];
     stateRef.current = Flip.getState(ITEM_SELECTOR);
     rectsRef.current = measure();
   }, []);
@@ -68,27 +75,34 @@ export function useFlipList() {
       ).length;
       const stats: FlipStats = { entered, exited, moved };
 
-      // 多路完成计数：Flip 位移 + 离场坍缩 全部结束后才算本轮结束
+      // 多路完成计数：Flip 位移 + 离场坍缩 全部结束后才算本轮结束（防重入）
       let pending = 0;
+      let finished = false;
       const done = () => {
+        if (finished) return;
         pending -= 1;
-        if (pending <= 0) onComplete(stats);
+        if (pending <= 0) {
+          finished = true;
+          onComplete(stats);
+        }
       };
 
       // 内容变化高亮
       for (const id of intent.changeIds) {
         const el = findByTodoId(id);
         if (el) {
-          gsap.fromTo(
+          const tween = gsap.fromTo(
             el,
             { backgroundColor: 'rgba(102, 126, 234, 0.35)' },
             {
               backgroundColor: 'rgba(102, 126, 234, 0)',
               duration: 0.8,
               ease: 'power2.out',
+              overwrite: 'auto',
               clearProps: 'backgroundColor',
             }
           );
+          sideTweensRef.current.push(tween);
         }
       }
 
@@ -114,7 +128,9 @@ export function useFlipList() {
         .filter((el): el is HTMLElement => el !== null);
       if (exitingEls.length > 0) {
         pending += 1;
-        gsap.to(exitingEls, {
+        // 0.3s 必须短于 Flip 的 0.4s：Flip 结束恢复文档流时坍缩须已完成，
+        // 否则清理 commit 移除节点时兄弟节点会跳动。
+        const exitTween = gsap.to(exitingEls, {
           opacity: 0,
           scale: 0.85,
           height: 0,
@@ -127,6 +143,7 @@ export function useFlipList() {
           overwrite: 'auto',
           onComplete: done,
         });
+        sideTweensRef.current.push(exitTween);
       }
 
       // filter 恢复：清掉坍缩内联样式后展开入场
@@ -134,7 +151,15 @@ export function useFlipList() {
         const el = findByTodoId(id);
         if (el) {
           gsap.set(el, { clearProps: 'all' });
-          gsap.from(el, { height: 0, opacity: 0, duration: 0.4, ease: 'power2.out' });
+          const tween = gsap.from(el, {
+            height: 0,
+            opacity: 0,
+            duration: 0.4,
+            ease: 'power2.out',
+            overwrite: 'auto',
+            clearProps: 'height,opacity',
+          });
+          sideTweensRef.current.push(tween);
         }
       }
 
