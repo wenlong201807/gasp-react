@@ -10,7 +10,6 @@ import styles from './FiberTodo.module.css';
 
 const WINDOW_TIMEOUT_MS = 2000; // 兜底：覆盖动画 400ms + 清理 commit + 2 帧宽限
 const MAX_RECORDS = 20;
-const EMPTY_INTENT: FlipIntent = { exitIds: new Set(), enterIds: new Set(), changeIds: new Set() };
 const EMPTY_STATS: FlipStats = { entered: 0, exited: 0, moved: 0 };
 
 const makeId = () =>
@@ -44,7 +43,7 @@ export function FiberTodoPage() {
 
   const accRef = useRef<Partial<PipelineRecord>>({});
   const t0Ref = useRef(0);
-  const intentRef = useRef<FlipIntent>(EMPTY_INTENT);
+  const intentRef = useRef<FlipIntent>({ exitIds: new Set(), enterIds: new Set(), changeIds: new Set() });
   const windowOpenRef = useRef(false);
   /** 当前打开的统计窗口所属的操作轮次（= version）；迟到回调据此丢弃 */
   const activeRoundRef = useRef(0);
@@ -59,7 +58,7 @@ export function FiberTodoPage() {
 
   /** 关窗出数：汇总一条流水线记录（轮次不符 = 迟到回调，直接丢弃） */
   const finalizeWindow = useCallback(
-    (round: number, flipStats: FlipStats) => {
+    (round: number, flipStats: FlipStats, truncated = false) => {
       if (!windowOpenRef.current || round !== activeRoundRef.current) return;
       windowOpenRef.current = false;
       window.clearTimeout(timeoutIdRef.current);
@@ -95,7 +94,12 @@ export function FiberTodoPage() {
         },
         flip: flipStats,
         frames,
-        consistent: diff ? inserted === flipStats.entered && removed === flipStats.exited : null,
+        // 截断轮（被打断/超时）窗口未走完整链路，不作一致性判定，UI 显示"统计不可用"
+        consistent: diff
+          ? truncated
+            ? null
+            : inserted === flipStats.entered && removed === flipStats.exited
+          : null,
       };
       setRecords((prev) => [record, ...prev].slice(0, MAX_RECORDS));
     },
@@ -106,7 +110,7 @@ export function FiberTodoPage() {
   const beginOp = useCallback(
     (op: string) => {
       if (windowOpenRef.current) {
-        finalizeWindow(activeRoundRef.current, EMPTY_STATS);
+        finalizeWindow(activeRoundRef.current, EMPTY_STATS, true);
       }
       seq += 1;
       const round = activeRoundRef.current + 1;
@@ -120,20 +124,18 @@ export function FiberTodoPage() {
       capture();
       windowOpenRef.current = true;
       timeoutIdRef.current = window.setTimeout(() => {
-        finalizeWindow(round, EMPTY_STATS); // 轮次守卫在 finalizeWindow 内
+        finalizeWindow(round, EMPTY_STATS, true); // 超时=截断轮
       }, WINDOW_TIMEOUT_MS);
     },
     [finalizeWindow, openWindow, startFrames, capture]
   );
 
-  /** Flip 全部动画结束：触发离场清理 commit，再 +2 帧宽限关窗（MutationObserver 微任务已投递） */
+  /** Flip 全部动画结束：清理 exiting 项（基于 state 而非本轮 intent，被中断轮遗留项一并回收），再 +2 帧宽限关窗 */
   const handleFlipComplete = useCallback(
     (round: number, stats: FlipStats) => {
       if (round !== activeRoundRef.current) return; // 被打断轮次的迟到回调，丢弃
-      if (intentRef.current.exitIds.size > 0) {
-        intentRef.current = { ...intentRef.current, exitIds: new Set() };
-        setTodos((prev) => prev.filter((t) => !t.exiting)); // 清理 commit：真实 DOM 移除计入本窗口
-      }
+      // 无 exiting 时返回原引用，React bail out，不产生多余 commit
+      setTodos((prev) => (prev.some((t) => t.exiting) ? prev.filter((t) => !t.exiting) : prev));
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
           finalizeWindow(round, stats);
@@ -145,6 +147,7 @@ export function FiberTodoPage() {
 
   const handleProfilerRender = useCallback(
     (info: { actualDuration: number; commitTime: number }) => {
+      // 注：生产构建下 Profiler onRender 不触发，triggerToCommitMs=-1 / renderMs=0 属预期
       if (!windowOpenRef.current) return; // keyMode 切换等非操作 commit 不计
       const commits = commitsRef.current;
       const last = commits[commits.length - 1];
@@ -250,6 +253,14 @@ export function FiberTodoPage() {
     bump();
   };
 
+  const switchKeyMode = (mode: KeyMode) => {
+    if (windowOpenRef.current) {
+      // 截断在飞窗口：keyMode 切换是配置变更，其全量 remount 不计入统计
+      finalizeWindow(activeRoundRef.current, EMPTY_STATS, true);
+    }
+    setKeyMode(mode);
+  };
+
   return (
     <div className={styles.page}>
       <header className={styles.header}>
@@ -302,14 +313,14 @@ export function FiberTodoPage() {
               <button
                 type="button"
                 className={`${styles.switchBtn} ${keyMode === 'id' ? styles.active : ''}`}
-                onClick={() => setKeyMode('id')}
+                onClick={() => switchKeyMode('id')}
               >
                 key=id（复用+移动）
               </button>
               <button
                 type="button"
                 className={`${styles.switchBtn} ${keyMode === 'index' ? styles.active : ''}`}
-                onClick={() => setKeyMode('index')}
+                onClick={() => switchKeyMode('index')}
               >
                 key=index（内容原地变）
               </button>

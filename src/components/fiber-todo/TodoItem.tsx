@@ -27,6 +27,9 @@ export function TodoItem({ todo, onToggle, onEdit, onRemove }: TodoItemProps) {
         className={styles.todoText}
         contentEditable
         suppressContentEditableWarning
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.preventDefault(); // 阻止 contentEditable 内部换行
+        }}
         onBlur={(e) => {
           const text = e.currentTarget.textContent?.trim();
           if (text && text !== todo.text) onEdit(todo.id, text);

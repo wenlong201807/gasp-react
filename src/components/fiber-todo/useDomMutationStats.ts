@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 interface MutationWindow {
   added: Set<Node>;
@@ -59,11 +59,11 @@ export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) 
     return () => observer.disconnect();
   }, [containerRef]);
 
-  const open = () => {
+  const open = useCallback(() => {
     currentRef.current = { added: new Set(), removed: new Set(), textUpdated: 0, attrUpdated: 0 };
-  };
+  }, []);
 
-  const close = (): MutationWindowResult | null => {
+  const close = useCallback((): MutationWindowResult | null => {
     const win = currentRef.current;
     currentRef.current = null;
     if (!win) return null;
@@ -78,7 +78,7 @@ export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) 
       textUpdated: win.textUpdated,
       attrUpdated: win.attrUpdated,
     };
-  };
+  }, []);
 
   return { open, close, supported: typeof MutationObserver !== 'undefined' };
 }
