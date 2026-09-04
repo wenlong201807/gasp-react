@@ -106,10 +106,49 @@ export function useFlipList() {
         }
       }
 
-      // 位移 / 入场回放
+      // 离场/隐藏项：先从文档流摘出（绝对定位钉在原视觉位、锁定宽度），
+      // 再淡出缩小。必须在 Flip.from 之前完成，让 Flip 测到收紧后的最终布局；
+      // Flip targets 也排除这些项，避免 Flip 的还原逻辑覆盖离场终态。
+      // exited 计数只含 exitIds（真移除）；hideIds 是筛选隐藏（节点保留，不计）
+      const leavingIds = new Set([...intent.exitIds, ...intent.hideIds]);
+      const leavingEls = [...leavingIds]
+        .map(findByTodoId)
+        .filter((el): el is HTMLElement => el !== null);
+
+      if (leavingEls.length > 0) {
+        const parent = leavingEls[0].parentElement as HTMLElement;
+        const parentRect = parent.getBoundingClientRect();
+        for (const el of leavingEls) {
+          const rect = el.getBoundingClientRect();
+          gsap.set(el, {
+            position: 'absolute',
+            top: rect.top - parentRect.top,
+            left: rect.left - parentRect.left,
+            width: rect.width,
+            marginTop: 0,
+            marginBottom: 0,
+          });
+        }
+        pending += 1;
+        const exitTween = gsap.to(leavingEls, {
+          opacity: 0,
+          scale: 0.85,
+          duration: 0.3,
+          ease: 'power2.in',
+          overwrite: 'auto',
+          onComplete: done,
+        });
+        sideTweensRef.current.push(exitTween);
+      }
+
+      // 位移 / 入场回放（targets 排除离场/隐藏项）
+      const flipTargets =
+        leavingEls.length > 0
+          ? `${ITEM_SELECTOR}${[...leavingIds].map((id) => `:not([data-todo-id="${id}"])`).join('')}`
+          : ITEM_SELECTOR;
       pending += 1;
       tlRef.current = Flip.from(state, {
-        targets: ITEM_SELECTOR,
+        targets: flipTargets,
         duration: 0.4,
         ease: 'power2.inOut',
         absolute: true,
@@ -121,32 +160,6 @@ export function useFlipList() {
           ),
         onComplete: done,
       });
-
-      // 离场/隐藏：高度坍缩 + 淡出（其余项随布局连续上移）。
-      // exited 计数只含 exitIds（真移除）；hideIds 是筛选隐藏（节点保留，不计）
-      const leavingIds = new Set([...intent.exitIds, ...intent.hideIds]);
-      const leavingEls = [...leavingIds]
-        .map(findByTodoId)
-        .filter((el): el is HTMLElement => el !== null);
-      if (leavingEls.length > 0) {
-        pending += 1;
-        // 0.3s 必须短于 Flip 的 0.4s：Flip 结束恢复文档流时坍缩须已完成，
-        // 否则清理 commit 移除节点时兄弟节点会跳动。
-        const exitTween = gsap.to(leavingEls, {
-          opacity: 0,
-          scale: 0.85,
-          height: 0,
-          marginTop: 0,
-          marginBottom: 0,
-          paddingTop: 0,
-          paddingBottom: 0,
-          duration: 0.3,
-          ease: 'power2.in',
-          overwrite: 'auto',
-          onComplete: done,
-        });
-        sideTweensRef.current.push(exitTween);
-      }
 
       // filter 恢复：清掉坍缩内联样式后展开入场
       for (const id of intent.enterIds) {
