@@ -13,8 +13,9 @@ export function TodoItem({ todo, onToggle, onEdit, onRemove }: TodoItemProps) {
     <li
       data-todo-id={todo.id}
       className={`fiber-todo-item ${styles.todoItem} ${todo.done ? styles.done : ''} ${
-        todo.exiting ? styles.exiting : ''
+        todo.exiting || todo.hidden ? styles.exiting : ''
       }`}
+      aria-hidden={todo.exiting || todo.hidden || undefined}
     >
       <input
         type="checkbox"
