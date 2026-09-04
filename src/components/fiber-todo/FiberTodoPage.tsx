@@ -228,9 +228,11 @@ export function FiberTodoPage() {
     const lower = q.trim().toLowerCase();
     const next = todos.map((t) => {
       const match = q.trim() === '' || t.text.toLowerCase().includes(lower);
-      if (!match && !t.exiting) {
+      if (!match) {
+        // 遗留的 exiting 项也登记本轮意图：动画侧 exited 才能与清理 commit 的
+        // 真实移除对齐，且坍缩 tween 会从冻结态续播到 0
         intentRef.current.exitIds.add(t.id);
-        return { ...t, exiting: true };
+        if (!t.exiting) return { ...t, exiting: true };
       }
       if (match && t.exiting) {
         intentRef.current.enterIds.add(t.id);
