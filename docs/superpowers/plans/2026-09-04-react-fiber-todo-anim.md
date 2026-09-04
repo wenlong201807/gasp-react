@@ -1599,13 +1599,21 @@ git commit -m "docs: fiber-todo 实施计划与验收记录"
 
 ## 验收记录（Task 10 执行时填写）
 
+验收时间：2026-09-05 · 方式：Playwright (Chromium headless) 对 dev server 逐项自动化 · 脚本输出 10/10 通过（EXIT=0）
+
 | 项 | 结果 | 备注 |
 |---|---|---|
-| add | 待验 | |
-| remove | 待验 | |
-| update | 待验 | |
-| filter | 待验 | |
-| id-key shuffle | 待验 | |
-| index-key shuffle | 待验 | |
-| stress +100 | 待验 | |
-| 连续打断 | 待验 | |
+| 菜单入口 | ✅ | Fiber Todo 卡片 + 全局 FPS 面板均在 |
+| add | ✅ | 新增行=[1,1]（真实DOM +1 / 动画 entered 1），verdict ✓ |
+| remove | ✅ | 移除行=[-1,1]，verdict ✓ |
+| update | ✅ | toggle 后属性变更=1，高亮生效，verdict ✓ |
+| filter | ✅ | 非破坏性：可见 1↔4、挂载数 4→4，双 verdict ✓（隐藏保留 + 恢复展开） |
+| id-key shuffle | ✅ | 真实 DOM moved=3（FLIP 位移动画），verdict ✓ |
+| index-key shuffle | ✅ | 真实 DOM moved=0、属性变更≈N（内容原地变），verdict ✓；动画侧 moved 为内容位移（信息列） |
+| stress +100 | ✅ | 新增行=[100,100]、移除=[0,0]、可见 104 项，管线面板帧统计有数 |
+| 连续打断 | ✅ | verdict ✓（截断轮显示"统计不可用"不误报），无卡在半坍缩中间态的项 |
+| 控制台零错误 | ✅ | 0 条 error/pageerror |
+
+验收过程中发现并修复的缺陷（附根因）：
+1. `89fb68c` 筛选破坏性 + MO 统计口径——筛选复用 exiting 清理导致项被真删（恢复不了）；空列表占位 `<p>` 计入 removed 误报。修法：Todo.hidden 隐藏保留 + hideIds（坍缩不计 exited）；MutationObserver 按 .fiber-todo-item 收口。
+2. `9c9f84a` Flip 还原覆盖离场终态——坍缩 tween 与 Flip.from absolute 收尾打架（运行时 style 写入序列取证）。修法：离场/隐藏项摘出文档流原位淡出，Flip targets 以 :not() 排除。
