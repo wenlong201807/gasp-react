@@ -72,7 +72,7 @@
 → useLayoutEffect：Flip.from(快照) 驱动入场/位移/高亮；exiting 项离场
 → gsap.ticker 逐帧采样（动画窗口内）
 → 离场动画 onComplete → 清理 commit（真正移除 exiting 项，计入同一窗口）
-→ 关窗（onComplete 后 +2 帧宽限，或 100ms 超时兜底）
+→ 关窗（onComplete 后 +2 帧宽限；兜底超时 2s，覆盖离场动画 300ms + 清理 commit）
 → 汇总为一条流水线记录 → 两个面板展示
 ```
 
@@ -83,7 +83,7 @@
 | add | insert 1 节点（其余节点位移） | 新项入场（透明度/缩放/y 位移）+ 其余项 FLIP 位移 |
 | remove | （延迟）remove 1 节点 | exiting 项淡出+缩小 → 完成后真正删除；其余项 FLIP 补位 |
 | update（勾选/改文本） | text/attr 变更 | 该项高亮闪烁（gsap timeline） |
-| 查：筛选 | 多节点进出 | 进出场 + FLIP 位移 |
+| 查：筛选 | 多节点进出 | 隐藏项走离场坍缩；恢复项清除坍缩内联样式后展开入场（clearProps + from 动画）+ FLIP 位移 |
 | 查：排序/洗牌 | 节点 reorder（id-key）或文本原地变（index-key） | FLIP 位移 或 无位移+高亮（如实反映） |
 
 ### 4.3 离场状态机
@@ -97,7 +97,7 @@ interface Todo { id: string; text: string; done: boolean; exiting?: boolean }
 
 ### 4.4 key 策略演示（教学核心）
 
-TodoList 提供 `keyMode: 'id' | 'index'` 开关：
+TodoList 提供 `keyMode: 'id' | 'index'` 开关（切换本身是配置变更而非 CRUD 操作：不计统计、不播动画，key 变化导致的整列表重挂载瞬时完成；对照实验在切换后的 shuffle 中呈现）：
 
 - **id-key**：洗牌时 Fiber 复用节点、真实 DOM 发生移动 → FLIP 平滑位移，diff 面板显示 `moved=N, textUpdates=0`
 - **index-key**：洗牌时 Fiber 按位置复用、DOM 节点不移动只有文本变 → 无位移动画、内容高亮，diff 面板显示 `moved=0, textUpdates=N`
@@ -123,7 +123,7 @@ TodoList 提供 `keyMode: 'id' | 'index'` 开关：
 - **动画中再操作**：Flip 内建中断处理，自动 kill 上一轮；统计窗口重开，旧窗口超时强制关闭并出数
 - **压力测试**：一键 +100 条（随机文本），为 LongTask/掉帧监控提供极端素材；列表虚拟化不做（out of scope）
 - **MutationObserver 兼容**：不支持时（极老浏览器）面板显示"不支持"，动画不受影响
-- **窗口兜底**：任何操作窗口 100ms 内未正常关闭则超时出数，避免统计悬挂
+- **窗口兜底**：任何操作窗口 2s 内未正常关闭则超时出数，避免统计悬挂（正常路径约 350–450ms：动画 ≤400ms + 清理 commit + 2 帧宽限）
 
 ## 7. 验收标准
 
