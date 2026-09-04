@@ -1,0 +1,79 @@
+import { useEffect, useRef } from 'react';
+
+interface MutationWindow {
+  added: Set<Node>;
+  removed: Set<Node>;
+  textUpdated: number;
+  attrUpdated: number;
+}
+
+export interface MutationWindowResult {
+  inserted: number;
+  removed: number;
+  moved: number;
+  textUpdated: number;
+  attrUpdated: number;
+}
+
+/**
+ * 监听容器内真实 DOM 变更，按"操作窗口"聚合。
+ * open() 开窗 → React commit 的变更流入 → close() 关窗返回统计。
+ * 折算规则：窗口内加了又删 = 未发生；先删后加同一节点 = moved。
+ */
+export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) {
+  const currentRef = useRef<MutationWindow | null>(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof MutationObserver === 'undefined') return;
+
+    const observer = new MutationObserver((records) => {
+      const win = currentRef.current;
+      if (!win) return;
+      for (const record of records) {
+        for (const node of record.addedNodes) win.added.add(node);
+        for (const node of record.removedNodes) {
+          if (win.added.has(node)) {
+            win.added.delete(node);
+          } else {
+            win.removed.add(node);
+          }
+        }
+        if (record.type === 'characterData') win.textUpdated += 1;
+        if (record.type === 'attributes') win.attrUpdated += 1;
+      }
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+      attributes: true,
+    });
+
+    return () => observer.disconnect();
+  }, [containerRef]);
+
+  const open = () => {
+    currentRef.current = { added: new Set(), removed: new Set(), textUpdated: 0, attrUpdated: 0 };
+  };
+
+  const close = (): MutationWindowResult | null => {
+    const win = currentRef.current;
+    currentRef.current = null;
+    if (!win) return null;
+    let moved = 0;
+    for (const node of win.removed) {
+      if (win.added.has(node)) moved += 1;
+    }
+    return {
+      inserted: win.added.size - moved,
+      removed: win.removed.size - moved,
+      moved,
+      textUpdated: win.textUpdated,
+      attrUpdated: win.attrUpdated,
+    };
+  };
+
+  return { open, close, supported: typeof MutationObserver !== 'undefined' };
+}
