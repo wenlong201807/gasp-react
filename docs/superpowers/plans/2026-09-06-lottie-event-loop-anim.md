@@ -230,6 +230,8 @@ git commit -m "feat: event-loop 舞台布局常量与核心类型"
 
 **规则：每个 `preset-*.ts` 文件只导出一个具名常量（如 `presetBasic`），校验脚本用 `Object.values(mod)[0]` 取预设，别加别的导出。**
 
+> **勘误（执行时发现）**：下方 preset-basic 示例代码中 `console` 数组只出现在"打印步"——违反 I3（consoleLines 必须是累计快照，每步携带）。实际实现以仓库文件为准：文件顶部定义 `OUT1..OUT4` 累计数组，**每一步**都带 `console: OUTn`。展开预设 2/3 数据表时同样遵守：每步 console 数组 = 截至该步全部输出。
+
 - [ ] **Step 2.1: 写 `script/event-loop-trace-verify.mjs`（完整文件）**
 
 ```js
