@@ -28,7 +28,9 @@ async function captureConsoleOutput(code) {
 	const logs = [];
 	const fakeConsole = { log: (...args) => logs.push(args.map(String).join(' ')) };
 	const prevRaf = globalThis.requestAnimationFrame;
-	globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(0), 0);
+	// rAF 模拟：浏览器中 rAF 在下一次渲染机会（约 16ms 帧边界）执行，晚于 setTimeout(0) 宏任务；
+	// 若垫成 setTimeout(0) 会因同队列 FIFO 抢到定时器前面，与浏览器顺序相反，故用 16ms 近似
+	globalThis.requestAnimationFrame = (cb) => setTimeout(() => cb(0), 16);
 	try {
 		new Function('console', code)(fakeConsole);
 		await new Promise((resolve) => setTimeout(resolve, 60));

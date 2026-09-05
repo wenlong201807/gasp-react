@@ -232,6 +232,8 @@ git commit -m "feat: event-loop 舞台布局常量与核心类型"
 
 > **勘误（执行时发现）**：下方 preset-basic 示例代码中 `console` 数组只出现在"打印步"——违反 I3（consoleLines 必须是累计快照，每步携带）。实际实现以仓库文件为准：文件顶部定义 `OUT1..OUT4` 累计数组，**每一步**都带 `console: OUTn`。展开预设 2/3 数据表时同样遵守：每步 console 数组 = 截至该步全部输出。
 
+> **勘误 2（执行时发现）**：校验脚本的 rAF 垫片 `setTimeout(cb, 0)` 在 Node 中因同队列 FIFO 会抢到 `setTimeout(0)` 之前，与浏览器顺序（rAF 在 ~16ms 渲染时机、晚于 0ms 定时器任务）相反。已改为 `setTimeout(cb, 16)` 近似帧边界；预设 3 的期望输出（`3: timeout` 先于 `4: raf`）保持浏览器语义不变。
+
 - [ ] **Step 2.1: 写 `script/event-loop-trace-verify.mjs`（完整文件）**
 
 ```js
