@@ -4,7 +4,7 @@ FROM node:20.11.0-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 
 # Copy dependency files
 COPY package.json pnpm-lock.yaml ./

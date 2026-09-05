@@ -24,8 +24,7 @@ services:
       dockerfile: docker/Dockerfile
       target: production
     ports:
-      - "80:80"
-      - "443:443"
+      - "127.0.0.1:18080:80"
     environment:
       - NODE_ENV=production
     restart: unless-stopped

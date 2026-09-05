@@ -1,8 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
-ENDPOINT="${1:-http://localhost:80/health}"
+ENDPOINT="${1:-http://127.0.0.1:18080/health}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-gsap-react}"
 TIMEOUT=5
+
 
 check_http() {
     if curl -sf --max-time "$TIMEOUT" "$ENDPOINT" > /dev/null; then
@@ -26,7 +28,7 @@ check_process() {
 
 check_logs() {
     local errors
-    errors=$(docker compose -f docker/docker-compose.yml logs --tail=50 2>&1 | grep -i "error\|fatal" || true)
+    errors=$(docker compose -p "$COMPOSE_PROJECT_NAME" -f "$COMPOSE_FILE" logs --tail=50 2>&1 | grep -i "error\|fatal" || true)
 
     if [ -n "$errors" ]; then
         echo "⚠️  Found error logs:"
