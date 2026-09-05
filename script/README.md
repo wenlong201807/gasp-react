@@ -9,6 +9,7 @@
 - `event-loop-fps-probe.mjs`：Node 行为探针，验证实时 FPS 采样的 1 秒窗口、首帧不足和 500ms 过期规则。
 - `event-loop-playback-probe.py`：播放诊断脚本。按时间轮询步骤计数和暂停按钮状态，并保存结束截图，用于确认 Lottie 帧事件持续推进。
 - `event-loop-console-probe.py`：浏览器事件诊断脚本。以 2x 播放预设并收集前若干条 Console，辅助定位 `enterFrame`、播放和事件回调问题。
+- `url-lifecycle-accept.py`：Playwright 端到端验收脚本。依次验证菜单 🌐 卡片、两幕选择页、舞台七节点/TLS/缓存判定区/六泳道、2x 播放到 20/20 与 14/14、单步回退、进度点跳步、重播、切幕重建、第 6 步 304 与第 9 步 from disk cache 徽标，并收集 pageerror 与保存结束截图。
 
 Python 脚本需要 Playwright。推荐由服务器管理脚本运行：
 

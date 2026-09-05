@@ -10,6 +10,7 @@ const animations = [
 	{ id: 'lottie', label: 'Lottie动画', icon: '🎨' },
 	{ id: 'fiber-todo', label: 'Fiber Todo', icon: '🧬' },
 	{ id: 'event-loop', label: '事件循环', icon: '🔄' },
+	{ id: 'url-lifecycle', label: 'URL生命周期', icon: '🌐' },
 ];
 
 interface AnimationControlsProps {

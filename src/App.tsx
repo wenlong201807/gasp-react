@@ -7,13 +7,15 @@ import { Layout } from '@/components/layout';
 import { LottieAnimation } from '@/components/lottie';
 import { WebVitalsPanel } from '@/components/performance';
 import { ScrollAnimation } from '@/components/scroll-animation';
+import { UrlLifecyclePage } from '@/components/url-lifecycle';
 
 type AnimationType =
 	| 'menu'
 	| 'scroll'
 	| 'lottie'
 	| 'fiber-todo'
-	| 'event-loop';
+	| 'event-loop'
+	| 'url-lifecycle';
 
 function App() {
 	const [currentAnimation, setCurrentAnimation] = useState<AnimationType>('menu');
@@ -28,6 +30,8 @@ function App() {
 				return <FiberTodoPage />;
 			case 'event-loop':
 				return <EventLoopPage />;
+			case 'url-lifecycle':
+				return <UrlLifecyclePage />;
 			default:
 				return <MenuPage onSelect={setCurrentAnimation} />;
 		}
@@ -52,6 +56,7 @@ const MenuPage: React.FC<{ onSelect: (type: AnimationType) => void }> = ({ onSel
 		{ id: 'lottie', name: 'Lottie Animation', icon: '🎨', color: 'from-pink-500 to-rose-500' },
 		{ id: 'fiber-todo', name: 'Fiber Todo', icon: '🧬', color: 'from-emerald-500 to-teal-500' },
 		{ id: 'event-loop', name: 'Event Loop', icon: '🔄', color: 'from-sky-500 to-indigo-500' },
+		{ id: 'url-lifecycle', name: 'URL Lifecycle', icon: '🌐', color: 'from-cyan-500 to-blue-500' },
 	] as const;
 
 	return (
@@ -84,6 +89,8 @@ const MenuPage: React.FC<{ onSelect: (type: AnimationType) => void }> = ({ onSel
 										'React Fiber 增删改查 · 真实 DOM 动画 · 全链路性能'}
 									{animation.id === 'event-loop' &&
 										'三预设 · Lottie 事件循环可视化 · 全链路高亮'}
+									{animation.id === 'url-lifecycle' &&
+										'两幕 34 步 · 从输入 URL 到上屏 · 缓存/DNS/TLS/渲染管线'}
 								</p>
 							</div>
 						</button>
