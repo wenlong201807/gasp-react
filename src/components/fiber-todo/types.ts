@@ -31,6 +31,9 @@ export interface FrameStats {
 	avgMs: number;
 	maxMs: number;
 	jankCount: number; // 帧间隔 > 32ms
+	thresholdMs?: number;
+	estimatedDroppedFrames?: number;
+	windowMs?: number;
 }
 
 /** A browser event-loop phase captured for one Todo operation. */

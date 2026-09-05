@@ -44,6 +44,9 @@ export function useFrameStats() {
 			avgMs: Math.round((s.sum / s.count) * 100) / 100,
 			maxMs: Math.round(s.max * 100) / 100,
 			jankCount: s.jank,
+				thresholdMs: 32,
+				estimatedDroppedFrames: s.jank,
+				windowMs: Math.round(s.sum * 100) / 100,
 		};
 	}, []);
 
