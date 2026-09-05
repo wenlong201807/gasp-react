@@ -2361,6 +2361,40 @@ git add src/App.tsx src/components/controls/AnimationControls.tsx
 git commit -m "feat: event-loop 接入应用菜单与导航"
 ```
 
+- [ ] **Step 10.7: Playwright 浏览器验收（9 项断言）**
+
+Run:
+```bash
+python3 /Users/zhuwenlong/.claude/skills/webapp-testing/scripts/with_server.py \
+  --server "pnpm dev" --port 5173 \
+  -- python3.11 script/event-loop-accept.py
+```
+
+Expected（9 项断言全绿，最后一行 `ALL CHECKS PASSED`）：
+
+```text
+✅ 舞台元素齐全（阶段条/代码/栈/WebAPIs/双队列/Console/解说）
+✅ basic: 播放结束输出 4 条顺序正确, 步数 24/24
+✅ 单步回退: 23/24
+✅ 进度点跳步: 10/24
+✅ 重播: 回到 1/24
+✅ await: 播放结束输出 5 条顺序正确, 步数 30/30
+✅ render: 播放结束输出 4 条顺序正确(rAF 最后), 步数 27/27
+ALL CHECKS PASSED
+```
+
+若失败，按以下工具脚本定位：
+
+| 脚本 | 用途 |
+|---|---|
+| `script/event-loop-accept.py` | 9 项端到端验收（最终 gate） |
+| `script/event-loop-playback-probe.py` | 12s 轮询计数器 + 暂停按钮状态 + 末屏截图，验证动画确实在跑 |
+| `script/event-loop-console-probe.py` | 抓前 12 条浏览器 console，定位 `onEnterFrame` 等事件流问题 |
+
+- [ ] **Step 10.8: 验收脚本说明（README 沉淀）**
+
+新增 `script/README.md`（见同目录），简述三脚本作用与运行方式。
+
 ---
 
 ## 计划自审记录（writing-plans Self-Review）
