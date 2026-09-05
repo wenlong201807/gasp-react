@@ -5,7 +5,8 @@
 ## 事件循环动画
 
 - `event-loop-trace-verify.mjs`：Node 严格校验脚本。加载三个事件循环预设，在 Node 中执行预设代码并核对真实 Console 输出顺序、trace 不变量与 Lottie 编译结果；运行 `node script/event-loop-trace-verify.mjs --strict`。
-- `event-loop-accept.py`：Playwright 端到端验收脚本。启动页面后依次验证菜单、三张预设、舞台区域、2x 播放、Console 输出、单步回退、进度点跳转、重播及另外两个预设。
+- `event-loop-accept.py`：Playwright 端到端验收脚本。启动页面后依次验证菜单、三张预设、舞台区域、2x 播放、Console 输出、单步回退、进度点跳转、重播、全屏/FPS 信息及退出行为；若浏览器拒绝原生全屏，则验收页面内沉浸模式。
+- `event-loop-fps-probe.mjs`：Node 行为探针，验证实时 FPS 采样的 1 秒窗口、首帧不足和 500ms 过期规则。
 - `event-loop-playback-probe.py`：播放诊断脚本。按时间轮询步骤计数和暂停按钮状态，并保存结束截图，用于确认 Lottie 帧事件持续推进。
 - `event-loop-console-probe.py`：浏览器事件诊断脚本。以 2x 播放预设并收集前若干条 Console，辅助定位 `enterFrame`、播放和事件回调问题。
 

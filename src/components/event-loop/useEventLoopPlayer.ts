@@ -3,8 +3,10 @@ import type { LottieRefCurrentProps } from 'lottie-react';
 import { FRAMES_PER_STEP } from './compiler/layout';
 import type { CompiledAnimation, Preset } from './types';
 
-export function useEventLoopPlayer(preset: Preset, compiled: CompiledAnimation) {
+export function useEventLoopPlayer(preset: Preset, compiled: CompiledAnimation, onFrame?: (timestamp: number) => void) {
 	const lottieRef = useRef<LottieRefCurrentProps>(null);
+	const onFrameRef = useRef(onFrame);
+	onFrameRef.current = onFrame;
 	const [frame, setFrame] = useState(0);
 	const [playing, setPlaying] = useState(false);
 	const [speed, setSpeedState] = useState(1);
@@ -19,7 +21,10 @@ export function useEventLoopPlayer(preset: Preset, compiled: CompiledAnimation) 
 	// 携带的是 currentTime（亚帧精度的当前帧号，可为小数）
 	const handleEnterFrame = useCallback((e: unknown) => {
 		const currentTime = (e as { currentTime?: number } | null | undefined)?.currentTime;
-		if (typeof currentTime === 'number') setFrame(currentTime);
+		if (typeof currentTime === 'number') {
+			setFrame(currentTime);
+			onFrameRef.current?.(performance.now());
+		}
 	}, []);
 
 	const play = useCallback(() => {

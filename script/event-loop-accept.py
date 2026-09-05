@@ -34,9 +34,21 @@ def main():
 
         # 3. 舞台元素齐全
         for t in ['调用栈', 'Web APIs', '宏任务队列', '微任务队列', 'Console',
-                  '① 任务（宏任务）', '② 微任务', '③ 渲染', '代码', '步骤 1/24']:
+                  '① 任务（宏任务）', '② 微任务', '③ 渲染', '代码', '步骤 1/24',
+                  '设计 60 FPS', '实时']:
             assert page.locator(f'text={t}').count() >= 1, f'missing stage element: {t}'
-        results.append('舞台元素齐全（阶段条/代码/栈/WebAPIs/双队列/Console/解说）')
+        fullscreen_button = page.locator('button', has_text='⛶ 全屏').first
+        assert fullscreen_button.count() == 1, 'fullscreen button missing'
+        fullscreen_button.click()
+        page.wait_for_timeout(300)
+        fullscreen_state = page.locator('button', has_text='⛶ 退出全屏').count() + page.locator('button', has_text='⛶ 退出沉浸').count()
+        assert fullscreen_state == 1, 'fullscreen or immersive mode did not activate'
+        assert page.locator('text=调用栈').count() >= 1, 'stage missing in fullscreen'
+        assert page.locator('text=设计 60 FPS').count() >= 1, 'FPS missing in fullscreen'
+        page.locator('button', has_text='⛶').first.click()
+        page.wait_for_timeout(300)
+        assert page.locator('button', has_text='⛶ 全屏').count() == 1, 'fullscreen exit failed'
+        results.append('全屏/FPS: 舞台与控制栏可进入全屏或沉浸模式, 设计 60 FPS 可见')
 
         # 4. 2x 播放到终点，输出与步数比对（轮询等待，headless 渲染可能慢于实时）
         page.locator('button', has_text='2x').first.click()
@@ -62,8 +74,7 @@ def main():
 
         # 7. 重播
         page.locator('button', has_text='⏮ 重播').first.click()
-        page.wait_for_timeout(300)
-        assert '1/24' in page.locator('body').inner_text(), 'replay failed'
+        assert wait_for_text(page, '1/24', 3000), 'replay failed'
         results.append('重播: 回到 1/24')
 
         # 8. 预设2 await
