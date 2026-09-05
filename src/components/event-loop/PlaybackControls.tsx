@@ -41,7 +41,7 @@ export function PlaybackControls({
 				className={styles.slider}
 				min={0}
 				max={player.totalFrames - 1}
-				value={player.frame}
+				value={Math.round(player.frame)}
 				onChange={(e) => player.seekFrame(Number(e.target.value))}
 			/>
 			<div className={styles.dots}>

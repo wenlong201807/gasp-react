@@ -76,6 +76,7 @@ export function EventLoopStage({ preset, onBack }: { preset: Preset; onBack: () 
 						loop={false}
 						autoplay={false}
 						style={{ position: 'absolute', top: 0, left: 0, width: STAGE.w, height: STAGE.h }}
+						onEnterFrame={player.handleEnterFrame}
 						onComplete={() => player.pause()}
 					/>
 					<div className={styles.overlay}>

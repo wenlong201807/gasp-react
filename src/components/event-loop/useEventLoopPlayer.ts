@@ -1,12 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { LottieRefCurrentProps } from 'lottie-react';
 import { FRAMES_PER_STEP } from './compiler/layout';
 import type { CompiledAnimation, Preset } from './types';
-
-interface AnimationPlayerLike {
-	addEventListener: (type: string, cb: (e: { frame: number }) => void) => void;
-	removeEventListener: (type: string, cb: (e: { frame: number }) => void) => void;
-}
 
 export function useEventLoopPlayer(preset: Preset, compiled: CompiledAnimation) {
 	const lottieRef = useRef<LottieRefCurrentProps>(null);
@@ -18,13 +13,14 @@ export function useEventLoopPlayer(preset: Preset, compiled: CompiledAnimation) 
 	const stepCount = preset.trace.length;
 	const stepIndex = Math.max(0, Math.min(stepCount - 1, Math.floor(frame / FRAMES_PER_STEP)));
 
-	useEffect(() => {
-		const player = lottieRef.current as unknown as AnimationPlayerLike | null;
-		if (!player) return;
-		const onEnterFrame = (e: { frame: number }) => setFrame(e.frame);
-		player.addEventListener('enterFrame', onEnterFrame);
-		return () => player.removeEventListener('enterFrame', onEnterFrame);
-	}, [compiled]);
+	// lottie-react 的 lottieRef 是封装层（无 addEventListener），
+	// 帧事件通过 <Lottie onEnterFrame={...}> prop 接入。
+	// 实测本版 lottie-web 的 enterFrame 事件没有 frame 字段，
+	// 携带的是 currentTime（亚帧精度的当前帧号，可为小数）
+	const handleEnterFrame = useCallback((e: unknown) => {
+		const currentTime = (e as { currentTime?: number } | null | undefined)?.currentTime;
+		if (typeof currentTime === 'number') setFrame(currentTime);
+	}, []);
 
 	const play = useCallback(() => {
 		const player = lottieRef.current;
@@ -87,6 +83,7 @@ export function useEventLoopPlayer(preset: Preset, compiled: CompiledAnimation) 
 
 	return {
 		lottieRef,
+		handleEnterFrame,
 		frame,
 		stepIndex,
 		playing,
