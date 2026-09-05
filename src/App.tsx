@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AnimationControls } from '@/components/controls';
+import { EventLoopPage } from '@/components/event-loop';
 import { FiberTodoPage } from '@/components/fiber-todo/FiberTodoPage';
 import { FPSPanel } from '@/components/fps';
 import { Layout } from '@/components/layout';
@@ -11,7 +12,8 @@ type AnimationType =
 	| 'menu'
 	| 'scroll'
 	| 'lottie'
-	| 'fiber-todo';
+	| 'fiber-todo'
+	| 'event-loop';
 
 function App() {
 	const [currentAnimation, setCurrentAnimation] = useState<AnimationType>('menu');
@@ -24,6 +26,8 @@ function App() {
 				return <LottieAnimation />;
 			case 'fiber-todo':
 				return <FiberTodoPage />;
+			case 'event-loop':
+				return <EventLoopPage />;
 			default:
 				return <MenuPage onSelect={setCurrentAnimation} />;
 		}
@@ -47,6 +51,7 @@ const MenuPage: React.FC<{ onSelect: (type: AnimationType) => void }> = ({ onSel
 		{ id: 'scroll', name: 'Scroll Animation', icon: '📜', color: 'from-blue-500 to-purple-500' },
 		{ id: 'lottie', name: 'Lottie Animation', icon: '🎨', color: 'from-pink-500 to-rose-500' },
 		{ id: 'fiber-todo', name: 'Fiber Todo', icon: '🧬', color: 'from-emerald-500 to-teal-500' },
+		{ id: 'event-loop', name: 'Event Loop', icon: '🔄', color: 'from-sky-500 to-indigo-500' },
 	] as const;
 
 	return (
@@ -77,6 +82,8 @@ const MenuPage: React.FC<{ onSelect: (type: AnimationType) => void }> = ({ onSel
 									{animation.id === 'lottie' && 'Lottie JSON 动画'}
 									{animation.id === 'fiber-todo' &&
 										'React Fiber 增删改查 · 真实 DOM 动画 · 全链路性能'}
+									{animation.id === 'event-loop' &&
+										'三预设 · Lottie 事件循环可视化 · 全链路高亮'}
 								</p>
 							</div>
 						</button>

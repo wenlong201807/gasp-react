@@ -9,6 +9,7 @@ const animations = [
 	{ id: 'scroll', label: '滚动动画', icon: '📜' },
 	{ id: 'lottie', label: 'Lottie动画', icon: '🎨' },
 	{ id: 'fiber-todo', label: 'Fiber Todo', icon: '🧬' },
+	{ id: 'event-loop', label: '事件循环', icon: '🔄' },
 ];
 
 interface AnimationControlsProps {
