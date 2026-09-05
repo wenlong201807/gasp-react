@@ -1,73 +1,73 @@
 .layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
 }
 
 .header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 1000;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	background: rgba(0, 0, 0, 0.8);
+	backdrop-filter: blur(10px);
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	z-index: 1000;
 }
 
 .nav {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 1rem 2rem;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+	font-size: 1.5rem;
+	font-weight: 800;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 }
 
 .menu {
-  display: flex;
-  gap: 2rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
+	display: flex;
+	gap: 2rem;
+	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
 .menu a {
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s ease;
+	color: rgba(255, 255, 255, 0.8);
+	text-decoration: none;
+	font-weight: 500;
+	transition: color 0.3s ease;
 }
 
 .menu a:hover {
-  color: #fff;
+	color: #fff;
 }
 
 .main {
-  flex: 1;
-  margin-top: 64px;
+	flex: 1;
+	margin-top: 64px;
 }
 
 .footer {
-  background: rgba(0, 0, 0, 0.5);
-  padding: 2rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.875rem;
+	background: rgba(0, 0, 0, 0.5);
+	padding: 2rem;
+	text-align: center;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 0.875rem;
 }
 
 @media (max-width: 768px) {
-  .menu {
-    gap: 1rem;
-    font-size: 0.875rem;
-  }
+	.menu {
+		gap: 1rem;
+		font-size: 0.875rem;
+	}
 }
