@@ -32,6 +32,8 @@
 | UI 组件（.tsx）之间互引 | 相对路径省扩展名（应用侧，Node 不加载） |
 | `script/*.mjs` 引 TS 模块 | 相对路径带 `.ts` |
 
+> **勘误 3（执行时发现）**：Task 7-9 代码块中 `event-loop/` 根目录文件引用写作 `from '../compiler/layout'` / `from '../types'`，正确应为 `from './compiler/layout'` / `from './types'`（这些文件与 `compiler/`、`types.ts` 同在 `event-loop/` 下）。以仓库实现为准。
+
 **lottie-react API（仓库先例 `src/components/lottie/LottieAnimation.tsx`）：** `lottieRef.current` 上有 `play() / pause() / stop() / setSpeed(n) / goToAndStop(frame, true) / getDuration(true)`；组件 props：`lottieRef / animationData / loop / autoplay / style / onComplete`。本计划不用 `goToAndPlay`（重播用 `goToAndStop(0,true)+play()` 替代，类型最稳）。`enterFrame` 事件监听需断言，见 Task 7。
 
 **舞台坐标系（全部来源 `compiler/layout.ts`，Lottie 与 DOM 共用同一坐标源，对齐由构造保证）：** 1200×800、60fps、每步 30 帧。区域：phase(40,24,1120,48) / code(40,96,336,428) / stack(408,96,240,428) / webapis(688,96,472,428) / console(40,548,336,116) / macro(408,548,372,116) / micro(808,548,352,116) / narration(40,688,1120,44)。播放控制栏在舞台**外**（页面级，响应式可读性优先；这是对 spec §7 示意图的唯一调整，其余布局不变）。
