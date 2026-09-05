@@ -92,12 +92,36 @@ export interface HeapTrace {
 	delta?: number;
 }
 
+export type UserTimingStatus = 'complete' | 'truncated' | 'unsupported';
+
+export interface UserTimingMeasure {
+	name: string;
+	phase: string;
+	operationId: string;
+	startTime: number;
+	duration: number;
+	status: UserTimingStatus;
+}
+
+export interface DevToolsDiagnosticAvailability {
+	snapshot: 'available' | 'unsupported' | 'failed';
+	sampling: 'available' | 'unsupported' | 'failed';
+	instrumentation: 'available' | 'unsupported' | 'failed';
+}
+
+export interface DevToolsDiagnosticTrace {
+	availability: DevToolsDiagnosticAvailability;
+	measures?: UserTimingMeasure[];
+	note: string;
+}
+
 export interface EventLoopTrace {
 	operationId: string;
 	source?: SourceLocation;
 	events: EventLoopEvent[];
 	longTasks: LongTaskTrace[];
 	heap: HeapTrace;
+	devtools?: DevToolsDiagnosticTrace;
 }
 /** 一次操作的流水线记录 */
 export interface PipelineRecord {
