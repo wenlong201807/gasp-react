@@ -93,7 +93,18 @@ class CdpClient {
     );
   }
 
+  off(method, listener) {
+    const listeners = this.events.get(method);
+    if (!listeners) return;
+    const remaining = listeners.filter((item) => item !== listener);
+    if (remaining.length) this.events.set(method, remaining);
+    else this.events.delete(method);
+  }
+
   close() {
+    for (const { reject } of this.pending.values()) reject(new Error('CDP client closed'));
+    this.pending.clear();
+    this.events.clear();
     this.socket.close();
   }
 }
@@ -115,9 +126,49 @@ const collectStream = (client, eventName) => {
 };
 
 const snapshot = async (client) => {
-  const read = collectStream(client, 'HeapProfiler.addHeapSnapshotChunk');
-  await client.command('HeapProfiler.takeHeapSnapshot', { reportProgress: false });
-  return read();
+  const chunks = [];
+  const listener = ({ chunk }) => chunks.push(chunk);
+  client.on('HeapProfiler.addHeapSnapshotChunk', listener);
+  try {
+    await client.command('HeapProfiler.takeHeapSnapshot', { reportProgress: false });
+    return chunks.join('');
+  } finally {
+    client.off('HeapProfiler.addHeapSnapshotChunk', listener);
+  }
+};
+
+const parseSnapshot = (text) => {
+  try {
+    const data = JSON.parse(text);
+    const meta = data.snapshot?.meta;
+    const fields = meta?.node_fields ?? [];
+    const types = meta?.node_types?.[0] ?? [];
+    const typeIndex = fields.indexOf('type');
+    const nameIndex = fields.indexOf('name');
+    const selfIndex = fields.indexOf('self_size');
+    const stride = fields.length;
+    const nodes = data.nodes ?? [];
+    const counts = {};
+    const constructors = {};
+    let shallowSize = 0;
+    for (let i = 0; i < nodes.length; i += stride) {
+      const type = types[nodes[i + typeIndex]] ?? 'unknown';
+      const name = data.strings?.[nodes[i + nameIndex]] ?? '(unknown)';
+      counts[type] = (counts[type] ?? 0) + 1;
+      constructors[name] = (constructors[name] ?? 0) + 1;
+      shallowSize += nodes[i + selfIndex] ?? 0;
+    }
+    return { nodeCount: stride ? nodes.length / stride : 0, objectCount: Object.values(counts).reduce((a, b) => a + b, 0), constructorCounts: counts, objectNames: constructors, shallowSize, retainedSize: { supported: false, reason: 'CDP snapshot contains retained graph data, but this script does not infer retained size without graph analysis.' } };
+  } catch (error) { return { supported: false, reason: `snapshot parse failed: ${error.message}` }; }
+};
+
+const samplingSummary = (profile) => {
+  const nodes = [];
+  const visit = (node) => { if (!node) return; nodes.push(node); for (const child of node.children ?? []) visit(child); };
+  visit(profile?.head);
+  return nodes.sort((a, b) => (b.selfSize ?? 0) - (a.selfSize ?? 0)).slice(0, 20).map((node) => ({
+    functionName: node.callFrame?.functionName ?? '(anonymous)', url: node.callFrame?.url ?? '', line: node.callFrame?.lineNumber, column: node.callFrame?.columnNumber, weight: node.selfSize ?? 0, sourceMap: { status: node.callFrame?.url ? 'not-resolved' : 'unavailable', reason: 'Raw CDP location retained; source-map resolution is not performed by this Node script.' }
+  }));
 };
 
 const main = async () => {
@@ -129,6 +180,10 @@ const main = async () => {
 
   const client = new CdpClient(page.webSocketDebuggerUrl);
   const traceChunks = [];
+  const instrumentationEvents = [];
+  const instrumentationListener = (payload) => {
+    if (instrumentationEvents.length < 5000) instrumentationEvents.push(payload);
+  };
   client.on('Tracing.dataCollected', ({ value }) => traceChunks.push(...value));
   const consoleErrors = [];
   client.on('Runtime.consoleAPICalled', ({ type, args }) => {
@@ -140,6 +195,8 @@ const main = async () => {
     await client.command('Runtime.enable');
     await client.command('Performance.enable');
     await client.command('HeapProfiler.enable');
+    client.on('HeapProfiler.lastSeenObjectId', instrumentationListener);
+    client.on('HeapProfiler.heapStatsUpdate', instrumentationListener);
     await client.command('Page.enable');
     await client.command('Page.navigate', { url: appUrl });
     await new Promise((resolve) => setTimeout(resolve, 1_000));
@@ -185,6 +242,14 @@ const main = async () => {
       instrumentation = { supported: false, reason: error.message };
     }
     const after = await snapshot(client);
+    let afterGc = null;
+    try {
+      await client.command('HeapProfiler.collectGarbage');
+      afterGc = await snapshot(client);
+    } catch (error) {
+      afterGc = null;
+      instrumentation.gc = { supported: false, reason: error.message };
+    }
     await client.command('Tracing.end');
     await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -202,24 +267,37 @@ const main = async () => {
         .map(({ name, value }) => [name, value])
     );
     const stamp = new Date().toISOString().replaceAll(':', '-');
+    const baselineSummary = parseSnapshot(baseline);
+    const afterSummary = parseSnapshot(after);
+    const afterGcSummary = afterGc ? parseSnapshot(afterGc) : null;
+    const samplingTopStacks = samplingSummary(sampling?.profile);
+    const instrumentationResult = { ...instrumentation, events: instrumentationEvents, eventCount: instrumentationEvents.length, status: instrumentation.supported ? 'started-and-stopped' : 'unsupported' };
     const result = {
       chromium: { browser: version.Browser, protocol: version['Protocol-Version'] },
       target: { url: page.url, appUrl },
       operation: pageData,
       metrics: finalMetrics,
       tracing: { eventCount: traceChunks.length, categories: ['devtools.timeline', 'blink.user_timing', 'v8.execute'] },
-      allocationSampling: { available: Boolean(sampling?.profile), profile: sampling?.profile ?? null },
-      allocationInstrumentation: instrumentation,
-      heapSnapshots: { baselineBytes: baseline.length, afterBytes: after.length },
+      allocationSampling: { available: Boolean(sampling?.profile), profile: sampling?.profile ?? null, topStacks: samplingTopStacks },
+      allocationInstrumentation: instrumentationResult,
+      heapSnapshots: { baseline: baselineSummary, after: afterSummary, afterGc: afterGcSummary, retainedSize: { supported: false, reason: 'Retained size requires DevTools graph analysis; not inferred here.' } },
       consoleErrors,
     };
     await writeFile(join(outputDir, `diagnostics-${stamp}.json`), JSON.stringify(result, null, 2));
     await writeFile(join(outputDir, `trace-${stamp}.json`), JSON.stringify(traceChunks));
-    await writeFile(join(outputDir, `allocation-sampling-${stamp}.json`), JSON.stringify(sampling?.profile ?? { unsupported: true }));
+    await writeFile(join(outputDir, `allocation-sampling-${stamp}.json`), JSON.stringify({ profile: sampling?.profile ?? null, topStacks: samplingTopStacks, supported: Boolean(sampling?.profile) }, null, 2));
     await writeFile(join(outputDir, `heap-before-${stamp}.heapsnapshot`), baseline);
     await writeFile(join(outputDir, `heap-after-${stamp}.heapsnapshot`), after);
+    if (afterGc) await writeFile(join(outputDir, `heap-after-gc-${stamp}.heapsnapshot`), afterGc);
+    await writeFile(join(outputDir, `allocation-instrumentation-${stamp}.json`), JSON.stringify(instrumentationResult, null, 2));
+    await writeFile(join(outputDir, `diagnostics-${stamp}.md`), `# Fiber Todo CDP diagnostics\n\n- Browser: ${version.Browser}\n- Snapshot: ${JSON.stringify(result.heapSnapshots.baseline)}\n- Retained size: unsupported (not inferred)\n- Sampling top stacks: ${samplingTopStacks.length}\n- Instrumentation: ${instrumentationResult.status}\n- Source maps: raw locations retained; resolution unavailable in this script.\n`);
     console.log(JSON.stringify(result, null, 2));
   } finally {
+    try { await client.command('HeapProfiler.stopSampling'); } catch {}
+    try { await client.command('HeapProfiler.stopTrackingHeapObjects'); } catch {}
+    try { await client.command('Tracing.end'); } catch {}
+    client.off('HeapProfiler.lastSeenObjectId', instrumentationListener);
+    client.off('HeapProfiler.heapStatsUpdate', instrumentationListener);
     client.close();
   }
 };

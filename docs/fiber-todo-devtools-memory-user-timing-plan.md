@@ -142,3 +142,8 @@ CDP 脚本输出：
 - 不把 Long Task overlap 当作唯一根因；
 - 不默认开启生产 source map；
 - 不在未确认方案前修改业务代码或执行长时间内存采样。
+
+
+## 实现状态
+
+CDP 诊断脚本现在解析 Heap Snapshot meta，输出 object/constructor count 与 shallow size；retained size 明确为 unsupported，避免无依据推导。Allocation sampling 递归汇总完整调用树并保留原始 URL、函数名、行列号及 source-map 状态。Allocation instrumentation 记录 CDP 事件、结构化 supported/status/reason，并在 finally 中停止 sampling、tracking、Tracing 与移除监听器。页面面板继续展示实时 `performance.memory`，同时明确 CDP 结果需通过脚本 artifact 导入，实时 heap 不等同于 retained/allocation。
