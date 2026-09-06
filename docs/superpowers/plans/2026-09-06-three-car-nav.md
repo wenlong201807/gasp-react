@@ -78,12 +78,12 @@ export interface EngineControls {
 - Create: src/components/three-car-nav/engine/RoadSystem.ts
 - Modify: src/components/three-car-nav/engine/ThreeCarNavEngine.ts（实例化并接入 update）
 
-- [ ] Step 1: 常量（锁定）：LANE_W=3.5；SEG_LEN=60；SEG_COUNT=8（覆盖 z∈[-360, +120]）；RECYCLE_Z=+90（group.position.z 超过则 z -= SEG_LEN*SEG_COUNT）；路灯间距 30m 双侧交错；路牌每 240m
-- [ ] Step 2: 每段 Group 含：沥青路面（深灰 #2b2d31，本向+对向整幅含隔离带宽度， PlaneGeometry 段）；车道线——本向车道间白虚线（宽 0.15m，3m 段/6m 空）、两侧边线白色实线、中央双黄实线；隔离绿化带（抬升 curb + 灌木 InstancedMesh，暗绿）；对向车道线对称
-- [ ] Step 3: 路灯 InstancedMesh（杆+悬臂+自发光灯头，dusk/night 发光）双侧交错；悬臂路牌：CanvasTexture 绘制绿底白字「⇦ 朝阳北路 | 凯恒中心」样式牌面
-- [ ] Step 4: update(dt, state)：按 scrollSpeed=state.speedKmh/3.6（gear==='P' 时 0）整体 +Z 平移并回收；dispose() 释放全部几何/材质/纹理
-- [ ] Step 5: 验证：lint+build；Playwright 截图（应见向前延伸的多车道大马路、车道线、路灯、路牌），console 无 error
-- [ ] Step 6: commit `feat(three-car-nav): procedural road system with lane markings, lamps, signs`
+- [x] Step 1: 常量（锁定）：LANE_W=3.5；SEG_LEN=60；SEG_COUNT=8（覆盖 z∈[-360, +120]）；RECYCLE_Z=+90（group.position.z 超过则 z -= SEG_LEN*SEG_COUNT）；路灯间距 30m 双侧交错；路牌每 240m
+- [x] Step 2: 每段 Group 含：沥青路面（深灰 #2b2d31，本向+对向整幅含隔离带宽度， PlaneGeometry 段）；车道线——本向车道间白虚线（宽 0.15m，3m 段/6m 空）、两侧边线白色实线、中央双黄实线；隔离绿化带（抬升 curb + 灌木 InstancedMesh，暗绿）；对向车道线对称
+- [x] Step 3: 路灯 InstancedMesh（杆+悬臂+自发光灯头，dusk/night 发光）双侧交错；悬臂路牌：CanvasTexture 绘制绿底白字「⇦ 朝阳北路 | 凯恒中心」样式牌面
+- [x] Step 4: update(dt, state)：按 scrollSpeed=state.speedKmh/3.6（gear==='P' 时 0）整体 +Z 平移并回收；dispose() 释放全部几何/材质/纹理
+- [x] Step 5: 验证：lint+build；Playwright 截图（应见向前延伸的多车道大马路、车道线、路灯、路牌），console 无 error（截图断言按主 agent 裁定 DEFER 至 Task 9，本任务以 lint+build+产物为关卡）
+- [x] Step 6: commit `feat(three-car-nav): procedural road system with lane markings, lamps, signs`
 
 ### Task 3: CitySystem 城市天际线
 
