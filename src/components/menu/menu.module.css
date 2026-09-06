@@ -1,0 +1,149 @@
+/* 主菜单专属样式（GitHub dark 视觉体系，与 event-loop / url-lifecycle 同构） */
+
+.menuPage {
+	min-height: 100vh;
+	width: 100%;
+	background: #0d1117;
+	color: #e6edf3;
+	padding: 48px 32px 96px;
+	box-sizing: border-box;
+}
+
+.menuInner {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.menuHeader {
+	margin-bottom: 32px;
+}
+
+.menuEyebrow {
+	display: inline-block;
+	font-size: 12px;
+	font-weight: 600;
+	letter-spacing: 1.5px;
+	color: #58a6ff;
+	padding: 4px 10px;
+	border: 1px solid #58a6ff;
+	border-radius: 999px;
+	margin-bottom: 16px;
+}
+
+.menuTitle {
+	font-size: 28px;
+	font-weight: 700;
+	margin: 0 0 8px;
+	color: #e6edf3;
+}
+
+.menuSubtitle {
+	font-size: 14px;
+	color: #8b949e;
+	margin: 0;
+	line-height: 1.6;
+}
+
+.menuGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 16px;
+}
+
+.menuCard {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	text-align: left;
+	background: #161b22;
+	border: 1px solid #30363d;
+	border-radius: 12px;
+	padding: 20px;
+	cursor: pointer;
+	color: #e6edf3;
+	font-family: inherit;
+	transition:
+		border-color 0.2s ease,
+		transform 0.2s ease,
+		background 0.2s ease;
+}
+
+.menuCard:hover {
+	border-color: #58a6ff;
+	background: #1c2230;
+	transform: translateY(-2px);
+}
+
+.menuCardHead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.menuCardIcon {
+	font-size: 28px;
+	line-height: 1;
+}
+
+.menuCardTag {
+	font-size: 11px;
+	font-weight: 600;
+	color: #8b949e;
+	padding: 2px 8px;
+	border: 1px solid #30363d;
+	border-radius: 999px;
+	white-space: nowrap;
+}
+
+.menuCardTitle {
+	font-size: 16px;
+	font-weight: 600;
+	margin: 0;
+	color: #e6edf3;
+}
+
+.menuCardDesc {
+	font-size: 13px;
+	color: #8b949e;
+	margin: 0;
+	line-height: 1.6;
+}
+
+.menuCardMeta {
+	margin-top: 4px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	color: #d29922;
+	font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.menuCardMeta::before {
+	content: '';
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: #3fb950;
+}
+
+.menuFooter {
+	margin-top: 40px;
+	padding-top: 16px;
+	border-top: 1px solid #30363d;
+	font-size: 12px;
+	color: #8b949e;
+	line-height: 1.7;
+}
+
+@media (max-width: 720px) {
+	.menuPage {
+		padding: 32px 20px 96px;
+	}
+
+	.menuTitle {
+		font-size: 22px;
+	}
+}
