@@ -8,108 +8,45 @@ on:
 
 env:
   NODE_VERSION: '20.11.0'
-  REGISTRY: registry.example.com
 
 jobs:
-  # ============ Code Check ============
   lint:
     name: Lint & Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run format:check
 
-      - name: Run Lint
-        run: pnpm run lint
-
-      - name: Run Format Check
-        run: pnpm run format:check
-
-  # ============ Build Test ============
   build:
     name: Build
     runs-on: ubuntu-latest
     needs: lint
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v2
         with:
           version: 8
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
 
-      - name: Build
-        run: pnpm run build
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-  # ============ Docker Build ============
-  docker:
-    name: Docker Build & Push
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_TOKEN }}
-
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist/
-
-      - name: Build and Push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile
-          push: true
-          tags: |
-            ${{ env.REGISTRY }}/gsap-react:${{ github.sha }}
-            ${{ env.REGISTRY }}/gsap-react:latest
-
-  # ============ Deploy ============
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    needs: docker
+    needs: build
     if: github.ref == 'refs/heads/main'
-
     steps:
       - name: Deploy to Server
         uses: appleboy/ssh-action@v1
