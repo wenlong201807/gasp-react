@@ -91,11 +91,11 @@ export interface EngineControls {
 - Create: src/components/three-car-nav/engine/CitySystem.ts
 - Modify: ThreeCarNavEngine.ts（接入）
 
-- [ ] Step 1: 楼群 InstancedMesh（BoxGeometry 共享）：两侧各 3 排，高度 15–80m、宽 14–24m 用种子随机（mulberry32 或等价，种子写死保证可复现）；窗灯 = 共享 emissive 贴图（CanvasTexture 生成窗户网格），暴露 setWindowGlow(k: 0..1)
-- [ ] Step 2: 地标剪影（固定远处不回收，材质接近背景色略深）：国贸三期（收分塔身简化堆叠 box）、CCTV 环（两个倾斜 box + 连接体），位于 -Z 远端两侧
-- [ ] Step 3: 楼群 treadmill 回收（周期可与路面不同，逻辑同 RECYCLE 模式）；update(dt, state)、dispose()
-- [ ] Step 4: 验证：lint+build；截图（道路两侧楼群天际线 + 远处地标剪影可见）
-- [ ] Step 5: commit `feat(three-car-nav): instanced city skyline with window glow and landmarks`
+- [x] Step 1: 楼群 InstancedMesh（BoxGeometry 共享）：两侧各 3 排，高度 15–80m、宽 14–24m 用种子随机（mulberry32 或等价，种子写死保证可复现）；窗灯 = 共享 emissive 贴图（CanvasTexture 生成窗户网格），暴露 setWindowGlow(k: 0..1)
+- [x] Step 2: 地标剪影（固定远处不回收，材质接近背景色略深）：国贸三期（收分塔身简化堆叠 box）、CCTV 环（两个倾斜 box + 连接体），位于 -Z 远端两侧
+- [x] Step 3: 楼群 treadmill 回收（周期可与路面不同，逻辑同 RECYCLE 模式）；update(dt, state)、dispose()
+- [x] Step 4: 验证：lint+build；截图（道路两侧楼群天际线 + 远处地标剪影可见）
+- [x] Step 5: commit `feat(three-car-nav): instanced city skyline with window glow and landmarks`
 
 ### Task 4: CameraRig + DayNightSystem
 

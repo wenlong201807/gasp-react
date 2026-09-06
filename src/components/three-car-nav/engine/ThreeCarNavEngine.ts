@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { CameraMode, DrivingState, EngineStats, TimeOfDay } from '../types';
+import { CitySystem } from './CitySystem';
 import { RoadSystem } from './RoadSystem';
 
 /** onStats 合并快照：引擎统计 + 驾驶状态（节流 5Hz 推送） */
@@ -13,7 +14,7 @@ const MAX_DT_SEC = 0.1; // 切后台回来防止 dt 跳变
 /**
  * three-car-nav 引擎骨架。
  * 生命周期：new(container) → start() → [RAF render] → dispose()
- * 后续任务会在此接入 CitySystem / CameraRig / CarSystem / HudSystem 等子系统。
+ * 后续任务会在此接入 CameraRig / CarSystem / HudSystem 等子系统。
  */
 export class ThreeCarNavEngine {
 	readonly state: DrivingState = {
@@ -37,6 +38,7 @@ export class ThreeCarNavEngine {
 	private camera: THREE.PerspectiveCamera;
 	private renderer: THREE.WebGLRenderer;
 	private roadSystem: RoadSystem;
+	private citySystem: CitySystem;
 	/** dusk 默认基础光（参数取自计划 Task 4 锁定值，DayNightSystem 接管后移除） */
 	private hemiLight: THREE.HemisphereLight;
 	private dirLight: THREE.DirectionalLight;
@@ -64,6 +66,7 @@ export class ThreeCarNavEngine {
 		this.scene.add(this.hemiLight, this.dirLight);
 
 		this.roadSystem = new RoadSystem(this.scene);
+		this.citySystem = new CitySystem(this.scene);
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 		container.appendChild(this.renderer.domElement);
@@ -96,6 +99,7 @@ export class ThreeCarNavEngine {
 
 		// 子系统先自释放（几何/材质/纹理全清）并从场景摘除
 		this.roadSystem.dispose();
+		this.citySystem.dispose();
 		this.hemiLight.dispose();
 		this.dirLight.dispose();
 
@@ -141,6 +145,7 @@ export class ThreeCarNavEngine {
 		if (!this.running) return;
 		const dt = Math.min(this.clock.getDelta(), MAX_DT_SEC);
 		this.roadSystem.update(dt, this.state);
+		this.citySystem.update(dt, this.state);
 		this.emitStats();
 		this.renderer.render(this.scene, this.camera);
 	};
