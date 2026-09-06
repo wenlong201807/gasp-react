@@ -8,6 +8,7 @@ import type { AnimationId } from '@/components/menu';
 import { MenuDock } from '@/components/menu';
 import { WebVitalsPanel } from '@/components/performance';
 import { ScrollAnimation } from '@/components/scroll-animation';
+import { ThreeCarNavPage } from '@/components/three-car-nav';
 import { UrlLifecyclePage } from '@/components/url-lifecycle';
 
 type AnimationType = AnimationId;
@@ -27,6 +28,8 @@ function App() {
 				return <EventLoopPage />;
 			case 'url-lifecycle':
 				return <UrlLifecyclePage />;
+			case 'three-car-nav':
+				return <ThreeCarNavPage />;
 			default:
 				return <ScrollAnimation />;
 		}

@@ -1,4 +1,10 @@
-export type AnimationId = 'scroll' | 'lottie' | 'fiber-todo' | 'event-loop' | 'url-lifecycle';
+export type AnimationId =
+	| 'scroll'
+	| 'lottie'
+	| 'fiber-todo'
+	| 'event-loop'
+	| 'url-lifecycle'
+	| 'three-car-nav';
 
 export interface MenuEntry {
 	id: AnimationId;
@@ -43,5 +49,12 @@ export const MENU_ENTRIES: readonly MenuEntry[] = [
 		icon: '🌐',
 		desc: '两幕 34 步 · 从输入 URL 到上屏 · 缓存/DNS/TLS/渲染管线',
 		meta: 'DNS · TLS · 渲染',
+	},
+	{
+		id: 'three-car-nav',
+		name: 'Three Car Nav',
+		icon: '🚗',
+		desc: '智驾巡航 · SU7 · 3D 全息 HUD 导航',
+		meta: 'Three.js',
 	},
 ];

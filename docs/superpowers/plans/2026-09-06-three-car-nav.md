@@ -26,8 +26,8 @@
 - Modify: src/components/menu/menu-entries.ts、src/App.tsx
 - Create: src/components/three-car-nav/{index.ts,types.ts,ThreeCarNavPage.tsx,useThreeCarNav.ts,engine/ThreeCarNavEngine.ts}
 
-- [ ] Step 1: `pnpm add three && pnpm add -D @types/three`，确认 package.json 变更
-- [ ] Step 2: 写 types.ts（契约，全文如下，后续任务不得改名）:
+- [x] Step 1: `pnpm add three && pnpm add -D @types/three`，确认 package.json 变更
+- [x] Step 2: 写 types.ts（契约，全文如下，后续任务不得改名）:
 
 ```ts
 export type CameraMode = 'chase' | 'driver' | 'side';
@@ -66,11 +66,11 @@ export interface EngineControls {
 }
 ```
 
-- [ ] Step 3: menu-entries.ts：AnimationId 联合类型加 'three-car-nav'；MENU_ENTRIES 追加 `{ id: 'three-car-nav', name: 'Three Car Nav', icon: '🚗', desc: '智驾巡航 · SU7 · 3D 全息 HUD 导航', meta: 'Three.js' }`；App.tsx switch 加分支渲染 ThreeCarNavPage
-- [ ] Step 4: ThreeCarNavEngine.ts 骨架：constructor(container: HTMLElement) 创建 Scene/PerspectiveCamera(fov 60)/WebGLRenderer(antialias, alpha:false)、挂 canvas、start() 启动 RAF 主循环（当前只 render）、dispose() 取消 RAF + renderer.dispose() + 移除 canvas + 释放几何/材质；实现 EngineControls 四个方法（先只改内部 DrivingState 字段）；内部持有 state: DrivingState（speedKmh 60、gear 'D'、cameraMode 'chase'、timeOfDay 'dusk'、distanceM 0、laneIndex 1、laneChangeHint null、trafficTargets []）
-- [ ] Step 5: useThreeCarNav.ts：useRef 持 engine，useEffect 挂载 container → new + start，cleanup 调 dispose；返回 controls（透传四个方法）+ stats state（engine.onStats 节流 5Hz 回调 setState，本任务可先只有 fps 占位 0/modelStatus 'loading'）；ThreeCarNavPage.tsx：全尺寸容器 div + ref + 底部加载提示（modelStatus==='loading' 时显示「模型加载中…」）；index.ts 导出 ThreeCarNavPage
-- [ ] Step 6: 验证：`pnpm lint && pnpm build` 零错误；Playwright（webapp-testing）：dev server 打开 → dock 出现「Three Car Nav」→ 点击 → 页面出现 canvas 且 console 无 error → 切走再切回，无重复 canvas（dispose 生效）
-- [ ] Step 7: `git add -A && git commit -m "feat(three-car-nav): scaffold page, types contract, menu registration"`
+- [x] Step 3: menu-entries.ts：AnimationId 联合类型加 'three-car-nav'；MENU_ENTRIES 追加 `{ id: 'three-car-nav', name: 'Three Car Nav', icon: '🚗', desc: '智驾巡航 · SU7 · 3D 全息 HUD 导航', meta: 'Three.js' }`；App.tsx switch 加分支渲染 ThreeCarNavPage
+- [x] Step 4: ThreeCarNavEngine.ts 骨架：constructor(container: HTMLElement) 创建 Scene/PerspectiveCamera(fov 60)/WebGLRenderer(antialias, alpha:false)、挂 canvas、start() 启动 RAF 主循环（当前只 render）、dispose() 取消 RAF + renderer.dispose() + 移除 canvas + 释放几何/材质；实现 EngineControls 四个方法（先只改内部 DrivingState 字段）；内部持有 state: DrivingState（speedKmh 60、gear 'D'、cameraMode 'chase'、timeOfDay 'dusk'、distanceM 0、laneIndex 1、laneChangeHint null、trafficTargets []）
+- [x] Step 5: useThreeCarNav.ts：useRef 持 engine，useEffect 挂载 container → new + start，cleanup 调 dispose；返回 controls（透传四个方法）+ stats state（engine.onStats 节流 5Hz 回调 setState，本任务可先只有 fps 占位 0/modelStatus 'loading'）；ThreeCarNavPage.tsx：全尺寸容器 div + ref + 底部加载提示（modelStatus==='loading' 时显示「模型加载中…」）；index.ts 导出 ThreeCarNavPage
+- [x] Step 6: 验证：`pnpm lint && pnpm build` 零错误；Playwright（webapp-testing）：dev server 打开 → dock 出现「Three Car Nav」→ 点击 → 页面出现 canvas 且 console 无 error → 切走再切回，无重复 canvas（dispose 生效）
+- [x] Step 7: `git add -A && git commit -m "feat(three-car-nav): scaffold page, types contract, menu registration"`
 
 ### Task 2: RoadSystem 程序化道路
 
