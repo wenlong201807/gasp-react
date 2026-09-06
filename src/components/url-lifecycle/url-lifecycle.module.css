@@ -410,6 +410,47 @@
 
 /* —— 播放器控制条（与 event-loop 同构语义） —— */
 
+.experience {
+	width: 100%;
+	max-width: 1200px;
+}
+
+.experience:fullscreen,
+.immersive {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	width: 100vw;
+	max-width: none;
+	min-height: 100vh;
+	padding: 24px;
+	box-sizing: border-box;
+	background: #0d1117;
+	overflow: auto;
+}
+
+.experience:fullscreen .stageWrap,
+.immersive .stageWrap {
+	max-width: none;
+	margin: 0 auto;
+}
+
+.experience:fullscreen .controlsBar,
+.immersive .controlsBar {
+	max-width: 1200px;
+	width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.fullscreenNotice {
+	font-size: 12px;
+	color: #d29922;
+}
+
 .controlsBar {
 	display: flex;
 	align-items: center;
