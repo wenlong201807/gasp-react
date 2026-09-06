@@ -10,7 +10,7 @@ export function useGSAP(callback?: () => void | (() => void), deps?: React.Depen
 	const contextSafe = useCallback(<T extends (...args: any[]) => any>(fn: T): T => {
 		return ((...args: any[]) => {
 			if (contextRef.current) {
-				return contextRef.current.add(fn)(...args);
+				return contextRef.current.add(() => fn(...args));
 			}
 			return fn(...args);
 		}) as T;

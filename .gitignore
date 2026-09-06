@@ -14,6 +14,7 @@ dist-ssr
 
 # Environment files (may contain credentials)
 .env
+.claude
 .env.*
 
 # Editor directories and files

@@ -1,0 +1,225 @@
+.dock {
+	position: fixed;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 32px;
+	z-index: 200;
+	pointer-events: none;
+}
+
+.panel {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 100%;
+	margin-block: auto;
+	width: 300px;
+	max-height: calc(100vh - 64px);
+	display: flex;
+	flex-direction: column;
+	background: #0a0a0feb;
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--color-border);
+	border-left: none;
+	border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+	box-shadow: var(--shadow-xl);
+	opacity: 0;
+	visibility: hidden;
+	will-change: transform, opacity;
+	pointer-events: auto;
+}
+
+.header {
+	padding: 14px 14px 10px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.subtitle {
+	margin: 4px 0 0;
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.45);
+}
+
+.list {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px;
+	margin: 0;
+}
+
+.entry {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid transparent;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.entry:hover,
+.entry:focus-visible {
+	background: var(--color-bg-card);
+	border-color: var(--color-border);
+}
+
+.entryActive {
+	background: linear-gradient(135deg, #667eea38, #764ba238);
+	border-color: #667eea73;
+	box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.entryIcon {
+	font-size: 20px;
+	line-height: 1;
+}
+
+.entryBody {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.entryName {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--color-text-primary);
+}
+
+.entryDesc {
+	font-size: 11px;
+	color: var(--color-text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.entryMeta {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: rgba(255, 255, 255, 0.45);
+	white-space: nowrap;
+}
+
+.footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 10px 14px;
+	border-top: 1px solid var(--color-border);
+}
+
+.badge {
+	padding: 2px 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-full);
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: rgba(255, 255, 255, 0.45);
+	white-space: nowrap;
+}
+
+.handle {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	color: rgba(255, 255, 255, 0.75);
+	cursor: pointer;
+	pointer-events: auto;
+	transition: color 0.2s ease;
+}
+
+.handle::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	bottom: 0;
+	width: 32px;
+	background: #0a0a0fe6;
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--color-border);
+	border-left: none;
+	border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+	box-shadow: var(--shadow-lg);
+	transition:
+		width 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.dock[data-phase="collapsed"] .handle:hover::before {
+	width: 36px;
+}
+
+.dock[data-phase="expanded"] .handle,
+.dock[data-phase="expanding"] .handle {
+	color: #ffffff;
+}
+
+.dock[data-phase="expanded"] .handle::before,
+.dock[data-phase="expanding"] .handle::before {
+	background: linear-gradient(180deg, #667eea4d, #764ba24d);
+	border-color: #667eea73;
+}
+
+.handleGlyph {
+	position: relative;
+	font-size: 16px;
+	line-height: 1;
+}
+
+.handleLabel {
+	position: relative;
+	writing-mode: vertical-rl;
+	font-size: 11px;
+	letter-spacing: 6px;
+}
+
+@media (max-width: 719px) {
+	.panel {
+		width: 260px;
+	}
+}
+
+@media (max-height: 699px) {
+	.panel {
+		max-height: 56vh;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.handle,
+	.handle::before,
+	.entry {
+		transition: none;
+	}
+}

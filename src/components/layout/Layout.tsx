@@ -1,6 +1,16 @@
+import { useEffect } from 'react';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import styles from './Layout.module.css';
 
 export function Layout({ children }: { children: React.ReactNode }) {
+	const { recordLCP, recordFID, recordCLS } = usePerformanceMonitor();
+
+	useEffect(() => {
+		recordLCP();
+		recordFID();
+		recordCLS();
+	}, []);
+
 	return (
 		<div className={styles.layout}>
 			<header className={styles.header}>

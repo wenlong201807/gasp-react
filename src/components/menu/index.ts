@@ -1,2 +1,3 @@
-export { MENU_ENTRIES, MenuPage } from './MenuPage';
-export type { MenuEntry } from './MenuPage';
+export { MenuDock } from './MenuDock';
+export type { AnimationId, MenuEntry } from './menu-entries';
+export { MENU_ENTRIES } from './menu-entries';

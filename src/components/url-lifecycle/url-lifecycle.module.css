@@ -114,11 +114,13 @@
 }
 
 .detailText {
-	font-size: 13px;
+	font-size: 12px;
+	line-height: 1.15;
 	color: #8b949e;
 	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
 }
 
 .stepCounter {

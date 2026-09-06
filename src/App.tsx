@@ -1,25 +1,19 @@
 import { useState } from 'react';
-import { AnimationControls } from '@/components/controls';
 import { EventLoopPage } from '@/components/event-loop';
 import { FiberTodoPage } from '@/components/fiber-todo/FiberTodoPage';
 import { FPSPanel } from '@/components/fps';
 import { Layout } from '@/components/layout';
 import { LottieAnimation } from '@/components/lottie';
+import type { AnimationId } from '@/components/menu';
+import { MenuDock } from '@/components/menu';
 import { WebVitalsPanel } from '@/components/performance';
 import { ScrollAnimation } from '@/components/scroll-animation';
 import { UrlLifecyclePage } from '@/components/url-lifecycle';
-import { MenuPage } from '@/components/menu';
 
-type AnimationType =
-	| 'menu'
-	| 'scroll'
-	| 'lottie'
-	| 'fiber-todo'
-	| 'event-loop'
-	| 'url-lifecycle';
+type AnimationType = AnimationId;
 
 function App() {
-	const [currentAnimation, setCurrentAnimation] = useState<AnimationType>('menu');
+	const [currentAnimation, setCurrentAnimation] = useState<AnimationType>('scroll');
 
 	const renderAnimation = () => {
 		switch (currentAnimation) {
@@ -34,7 +28,7 @@ function App() {
 			case 'url-lifecycle':
 				return <UrlLifecyclePage />;
 			default:
-				return <MenuPage onSelect={(id) => setCurrentAnimation(id as AnimationType)} />;
+				return <ScrollAnimation />;
 		}
 	};
 
@@ -43,10 +37,7 @@ function App() {
 			<FPSPanel />
 			<WebVitalsPanel />
 			{renderAnimation()}
-			<AnimationControls
-				onAnimationChange={(value) => setCurrentAnimation(value as AnimationType)}
-				currentAnimation={currentAnimation}
-			/>
+			<MenuDock currentAnimation={currentAnimation} onSelect={setCurrentAnimation} />
 		</Layout>
 	);
 }
