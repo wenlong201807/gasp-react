@@ -1,64 +1,119 @@
-.controls {
+/* 动画切换控件（右侧边索 + 折叠面板） */
+
+.dock {
 	position: fixed;
-	bottom: 24px;
-	left: 50%;
-	transform: translateX(-50%);
-	background: rgba(0, 0, 0, 0.9);
-	backdrop-filter: blur(20px);
-	border-radius: 16px;
-	padding: 1rem 1.5rem;
+	top: 50%;
+	right: 0;
+	transform: translateY(-50%);
+	z-index: 200;
+	display: flex;
+	align-items: stretch;
+	pointer-events: none;
+}
+
+.handle {
+	pointer-events: auto;
+	width: 14px;
+	align-self: stretch;
+	background: #161b22;
+	border: 1px solid #30363d;
+	border-right: none;
+	border-radius: 8px 0 0 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	color: #8b949e;
+	transition:
+		background 0.2s ease,
+		color 0.2s ease,
+		width 0.2s ease;
+	padding: 0;
+}
+
+.handle:hover,
+.dockOpen .handle {
+	background: #1f2632;
+	color: #58a6ff;
+	width: 18px;
+}
+
+.handleGlyph {
+	font-size: 11px;
+	line-height: 1;
+	transform: rotate(90deg);
+	letter-spacing: 1px;
+	user-select: none;
+}
+
+.panel {
+	pointer-events: auto;
+	width: 168px;
+	background: rgba(13, 17, 23, 0.94);
+	backdrop-filter: blur(8px);
+	border: 1px solid #30363d;
+	border-right: none;
+	border-radius: 12px 0 0 12px;
+	padding: 12px;
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
-	z-index: 100;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+	gap: 8px;
+	opacity: 0;
+	transform: translateX(8px);
+	will-change: transform, opacity;
 }
 
-.title {
-	font-size: 0.75rem;
+.panelTitle {
+	font-size: 11px;
 	text-transform: uppercase;
-	letter-spacing: 1px;
-	color: rgba(255, 255, 255, 0.5);
-	margin: 0;
+	letter-spacing: 1.2px;
+	color: #8b949e;
+	margin: 0 0 2px;
+	padding: 0 4px;
 }
 
-.buttons {
+.list {
 	display: flex;
-	gap: 0.5rem;
+	flex-direction: column;
+	gap: 4px;
 }
 
 .btn {
-	padding: 0.5rem 1rem;
-	border: 1px solid rgba(255, 255, 255, 0.2);
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	border: 1px solid #30363d;
 	border-radius: 8px;
-	background: transparent;
-	color: rgba(255, 255, 255, 0.8);
-	font-size: 0.875rem;
-	font-weight: 500;
+	background: #161b22;
+	color: #e6edf3;
+	font-size: 13px;
 	cursor: pointer;
-	transition: all 0.3s ease;
+	text-align: left;
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease;
 }
 
 .btn:hover {
-	background: rgba(255, 255, 255, 0.1);
-	border-color: rgba(255, 255, 255, 0.3);
+	background: #1f2632;
+	border-color: #58a6ff;
 }
 
-.btn.active {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	border-color: transparent;
-	color: #fff;
+.btnActive {
+	background: rgba(88, 166, 255, 0.12);
+	border-color: #58a6ff;
+	color: #58a6ff;
 }
 
-@media (max-width: 768px) {
-	.controls {
-		left: 16px;
-		right: 16px;
-		transform: none;
-	}
+.icon {
+	font-size: 14px;
+	line-height: 1;
+}
 
-	.buttons {
-		flex-wrap: wrap;
+@media (max-width: 720px) {
+	.panel {
+		width: 152px;
 	}
 }
