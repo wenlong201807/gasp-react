@@ -16,13 +16,13 @@ export const MENU_ENTRIES: readonly MenuEntry[] = [
 		desc: '滚动触发的动画效果',
 		meta: 'ScrollTrigger',
 	},
-	{
-		id: 'lottie',
-		name: 'Lottie Animation',
-		icon: '🎨',
-		desc: 'Lottie JSON 动画',
-		meta: 'lottie-react',
-	},
+	// {
+	// 	id: 'lottie',
+	// 	name: 'Lottie Animation',
+	// 	icon: '🎨',
+	// 	desc: 'Lottie JSON 动画',
+	// 	meta: 'lottie-react',
+	// },
 	{
 		id: 'fiber-todo',
 		name: 'Fiber Todo',
