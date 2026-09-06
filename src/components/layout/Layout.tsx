@@ -15,7 +15,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 		<div className={styles.layout}>
 			<header className={styles.header}>
 				<nav className={styles.nav}>
-					<div className={styles.logo}>Gasp-React</div>
+					<div className={styles.logo}>GSAP-React</div>
 					<ul className={styles.menu}>
 						<li>
 							<a href="#fps">FPS</a>

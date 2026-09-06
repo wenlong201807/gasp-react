@@ -62,7 +62,7 @@ export function MenuPage({ onSelect }: MenuPageProps) {
 			<div className={styles.menuInner}>
 				<header className={styles.menuHeader}>
 					<span className={styles.menuEyebrow}>GSAP · LOTTIE · CSS</span>
-					<h1 className={styles.menuTitle}>Gasp-React 动画展示</h1>
+					<h1 className={styles.menuTitle}>GSAP-React 动画展示</h1>
 					<p className={styles.menuSubtitle}>
 						高性能动画与全链路可视化 · 统一深色科技风 · 接入 Web Vitals / FPS / 内存监控
 					</p>
