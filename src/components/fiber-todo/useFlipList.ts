@@ -34,7 +34,9 @@ export function useFlipList() {
   };
 
   const findByTodoId = (id: string): HTMLElement | null =>
-    document.querySelector<HTMLElement>(`${ITEM_SELECTOR}[data-todo-id="${id}"]`);
+    document.querySelector<HTMLElement>(
+      `${ITEM_SELECTOR}[data-todo-id="${id}"]`,
+    );
 
   const capture = useCallback(() => {
     // 中断在飞的旁路动画（高亮/展开/离场坍缩）。Flip 主 timeline 不裸 kill：
@@ -65,13 +67,17 @@ export function useFlipList() {
       let moved = 0;
       for (const [id, rect] of next) {
         const old = prev.get(id);
-        if (old && (Math.abs(old.top - rect.top) > 1 || Math.abs(old.left - rect.left) > 1)) {
+        if (
+          old &&
+          (Math.abs(old.top - rect.top) > 1 ||
+            Math.abs(old.left - rect.left) > 1)
+        ) {
           moved += 1;
         }
       }
       const entered = [...next.keys()].filter((id) => !prev.has(id)).length;
       const exited = [...prev.keys()].filter(
-        (id) => !next.has(id) || intent.exitIds.has(id)
+        (id) => !next.has(id) || intent.exitIds.has(id),
       ).length;
       const stats: FlipStats = { entered, exited, moved };
 
@@ -100,7 +106,7 @@ export function useFlipList() {
               ease: 'power2.out',
               overwrite: 'auto',
               clearProps: 'backgroundColor',
-            }
+            },
           );
           sideTweensRef.current.push(tween);
         }
@@ -156,7 +162,14 @@ export function useFlipList() {
           gsap.fromTo(
             els,
             { opacity: 0, scale: 0.85, y: 24 },
-            { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: 'power2.out', clearProps: 'all' }
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.4,
+              ease: 'power2.out',
+              clearProps: 'all',
+            },
           ),
         onComplete: done,
       });
@@ -180,7 +193,7 @@ export function useFlipList() {
 
       return stats;
     },
-    []
+    [],
   );
 
   return { capture, play };

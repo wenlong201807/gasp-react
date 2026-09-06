@@ -1,20 +1,30 @@
 import { Profiler, useLayoutEffect, useRef } from 'react';
+import styles from './FiberTodo.module.css';
 import { TodoItem } from './TodoItem';
 import type { FlipIntent, FlipStats, KeyMode, Todo } from './types';
-import styles from './FiberTodo.module.css';
 
 interface TodoListProps {
   todos: Todo[];
   keyMode: KeyMode;
   version: number;
   intent: FlipIntent;
-  play: (intent: FlipIntent, onComplete: (stats: FlipStats) => void) => FlipStats;
+  play: (
+    intent: FlipIntent,
+    onComplete: (stats: FlipStats) => void,
+  ) => FlipStats;
   /** round = 触发本次回放的 version；页面层用它做迟到回调守卫 */
   onFlipComplete: (round: number, stats: FlipStats) => void;
   onToggle: (id: string) => void;
   onEdit: (id: string, text: string) => void;
   onRemove: (id: string) => void;
-  onProfilerRender: (info: { actualDuration: number; commitTime: number }) => void;
+  onProfilerRender: (info: {
+    id: string;
+    phase: 'mount' | 'update' | 'nested-update';
+    actualDuration: number;
+    baseDuration: number;
+    startTime: number;
+    commitTime: number;
+  }) => void;
 }
 
 export function TodoList({
@@ -39,14 +49,21 @@ export function TodoList({
   }, [version, intent, play, onFlipComplete]);
 
   const handleProfilerRender: React.ProfilerOnRenderCallback = (
-    _id,
-    _phase,
+    id,
+    phase,
     actualDuration,
-    _baseDuration,
-    _startTime,
-    commitTime
+    baseDuration,
+    startTime,
+    commitTime,
   ) => {
-    onProfilerRender({ actualDuration, commitTime });
+    onProfilerRender({
+      id,
+      phase,
+      actualDuration,
+      baseDuration,
+      startTime,
+      commitTime,
+    });
   };
 
   return (
@@ -64,7 +81,9 @@ export function TodoList({
           ))}
         </ul>
       </Profiler>
-      {todos.length === 0 && <p className={styles.empty}>列表为空，添加一条试试</p>}
+      {todos.length === 0 && (
+        <p className={styles.empty}>列表为空，添加一条试试</p>
+      )}
     </div>
   );
 }

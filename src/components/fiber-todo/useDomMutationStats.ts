@@ -25,7 +25,9 @@ export interface MutationWindowResult {
  * 页面层在动画 onComplete + 2 rAF 后关窗，天然满足；style 属性已被
  * attributeFilter 排除，GSAP 动画期间的 inline style 写入不会污染统计。
  */
-export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) {
+export function useDomMutationStats(
+  containerRef: React.RefObject<HTMLElement>,
+) {
   const currentRef = useRef<MutationWindow | null>(null);
 
   useEffect(() => {
@@ -52,7 +54,11 @@ export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) 
           }
         }
         if (record.type === 'characterData') {
-          if ((record.target as Node).parentElement?.classList.contains('fiber-todo-item')) {
+          if (
+            (record.target as Node).parentElement?.classList.contains(
+              'fiber-todo-item',
+            )
+          ) {
             win.textUpdated += 1;
           }
         }
@@ -74,7 +80,12 @@ export function useDomMutationStats(containerRef: React.RefObject<HTMLElement>) 
   }, [containerRef]);
 
   const open = useCallback(() => {
-    currentRef.current = { added: new Set(), removed: new Set(), textUpdated: 0, attrUpdated: 0 };
+    currentRef.current = {
+      added: new Set(),
+      removed: new Set(),
+      textUpdated: 0,
+      attrUpdated: 0,
+    };
   }, []);
 
   const close = useCallback((): MutationWindowResult | null => {

@@ -1,5 +1,5 @@
-import type { Todo } from './types';
 import styles from './FiberTodo.module.css';
+import type { Todo } from './types';
 
 interface TodoItemProps {
   todo: Todo;

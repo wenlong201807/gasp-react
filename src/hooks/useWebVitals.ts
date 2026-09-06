@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
-import { webVitalsCollector } from '@/utils/webVitals';
+import { useEffect, useState } from 'react';
 import type { WebVitalsMetric } from '@/utils/webVitals';
+import { webVitalsCollector } from '@/utils/webVitals';
 
 export function useWebVitals() {
-  const [metrics, setMetrics] = useState<WebVitalsMetric[]>([]);
+	const [metrics, setMetrics] = useState<WebVitalsMetric[]>([]);
 
-  useEffect(() => {
-    const collect = () => {
-      setMetrics(webVitalsCollector.getMetrics());
-    };
+	useEffect(() => {
+		const collect = () => {
+			setMetrics(webVitalsCollector.getMetrics());
+		};
 
-    collect();
+		collect();
 
-    const interval = setInterval(collect, 5000);
-    return () => clearInterval(interval);
-  }, []);
+		const interval = setInterval(collect, 5000);
+		return () => clearInterval(interval);
+	}, []);
 
-  return metrics;
+	return metrics;
 }

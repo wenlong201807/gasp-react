@@ -31,22 +31,114 @@ export interface FrameStats {
   avgMs: number;
   maxMs: number;
   jankCount: number; // 帧间隔 > 32ms
+  thresholdMs?: number;
+  estimatedDroppedFrames?: number;
+  windowMs?: number;
 }
 
+/** A browser event-loop phase captured for one Todo operation. */
+export type EventLoopPhase =
+  | 'input'
+  | 'task'
+  | 'microtask'
+  | 'react-render'
+  | 'react-commit'
+  | 'dom-mutation'
+  | 'raf'
+  | 'animation'
+  | 'long-task'
+  | 'heap';
+
+export type EventLoopQueue =
+  | 'user-interaction'
+  | 'scheduler'
+  | 'timer'
+  | 'microtask'
+  | 'rendering'
+  | 'unknown';
+
+export interface SourceLocation {
+  file: string;
+  functionName: string;
+  line?: number;
+  column?: number;
+}
+
+export interface EventLoopEvent {
+  sequence: number;
+  operationId: string;
+  phase: EventLoopPhase;
+  queue: EventLoopQueue;
+  startTime: number;
+  endTime: number;
+  duration: number;
+  source?: SourceLocation;
+  detail?: string;
+}
+
+export interface LongTaskTrace {
+  startTime: number;
+  endTime: number;
+  duration: number;
+  attribution?: string;
+  overlaps: string[];
+}
+
+export interface HeapTrace {
+  supported: boolean;
+  before?: number;
+  peak?: number;
+  after?: number;
+  delta?: number;
+}
+
+export type UserTimingStatus = 'complete' | 'truncated' | 'unsupported';
+
+export interface UserTimingMeasure {
+  name: string;
+  phase: string;
+  operationId: string;
+  startTime: number;
+  duration: number;
+  status: UserTimingStatus;
+}
+
+export interface DevToolsDiagnosticAvailability {
+  snapshot: 'available' | 'unsupported' | 'failed';
+  sampling: 'available' | 'unsupported' | 'failed';
+  instrumentation: 'available' | 'unsupported' | 'failed';
+}
+
+export interface DevToolsDiagnosticTrace {
+  availability: DevToolsDiagnosticAvailability;
+  measures?: UserTimingMeasure[];
+  note: string;
+}
+
+export interface EventLoopTrace {
+  operationId: string;
+  source?: SourceLocation;
+  events: EventLoopEvent[];
+  longTasks: LongTaskTrace[];
+  heap: HeapTrace;
+  devtools?: DevToolsDiagnosticTrace;
+}
 /** 一次操作的流水线记录 */
 export interface PipelineRecord {
   seq: number;
   op: string;
+  operationId: string;
+  source?: SourceLocation;
   t0: number;
-  triggerToCommitMs: number; // Profiler commitTime - t0（无 commit 时 -1）
-  renderMs: number; // 窗口内各 commit actualDuration 之和
+  triggerToCommitMs: number;
+  renderMs: number;
   diff: DiffStats;
   flip: FlipStats;
   frames: FrameStats | null;
-  consistent: boolean | null; // inserted===entered && removed===exited
+  consistent: boolean | null;
+  trace: EventLoopTrace;
 }
 
-/** 一次操作携带的动画意图（由页面在操作时计算，commit 后由 TodoList 消费） */
 export interface FlipIntent {
   exitIds: Set<string>; // 本轮离场（DOM 保留坍缩，动画后清理 commit 移除）
   hideIds: Set<string>; // 筛选隐藏（坍缩动画但不计 exited——节点未从 DOM 移除）

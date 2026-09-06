@@ -1,12 +1,20 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { EventLoopTracePanel } from './EventLoopTracePanel';
 import { FiberDiffPanel } from './FiberDiffPanel';
+import styles from './FiberTodo.module.css';
 import { RenderPipelinePanel } from './RenderPipelinePanel';
 import { TodoList } from './TodoList';
+import type {
+  FlipIntent,
+  FlipStats,
+  KeyMode,
+  PipelineRecord,
+  Todo,
+} from './types';
 import { useDomMutationStats } from './useDomMutationStats';
+import { useEventLoopTrace } from './useEventLoopTrace';
 import { useFlipList } from './useFlipList';
 import { useFrameStats } from './useFrameStats';
-import type { FlipIntent, FlipStats, KeyMode, PipelineRecord, Todo } from './types';
-import styles from './FiberTodo.module.css';
 
 const WINDOW_TIMEOUT_MS = 2000; // 兜底：覆盖动画 400ms + 清理 commit + 2 帧宽限
 const MAX_RECORDS = 20;
@@ -18,13 +26,24 @@ const makeId = () =>
     : `id-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
 const seed = (): Todo[] => [
-  { id: makeId(), text: '学习 React Fiber：render → reconcile → commit', done: false },
+  {
+    id: makeId(),
+    text: '学习 React Fiber：render → reconcile → commit',
+    done: false,
+  },
   { id: makeId(), text: '给 Todo 增删改查加上 FLIP 动画', done: false },
   { id: makeId(), text: '监控动画全链路性能', done: true },
   { id: makeId(), text: '对照 key=id 与 key=index 的 diff 差异', done: false },
 ];
 
-const STRESS_LABELS = ['对齐颗粒度', '拉通底盘', '闭环交付', '抓手落地', '顶层设计', '底层逻辑'];
+const STRESS_LABELS = [
+  '对齐颗粒度',
+  '拉通底盘',
+  '闭环交付',
+  '抓手落地',
+  '顶层设计',
+  '底层逻辑',
+];
 
 let seq = 0;
 
@@ -37,23 +56,38 @@ export function FiberTodoPage() {
   const [version, setVersion] = useState(0);
 
   const listRef = useRef<HTMLDivElement>(null);
-  const { open: openWindow, close: closeWindow, supported } = useDomMutationStats(listRef);
+  const {
+    open: openWindow,
+    close: closeWindow,
+    supported,
+  } = useDomMutationStats(listRef);
   const { start: startFrames, stop: stopFrames } = useFrameStats();
   const { capture, play } = useFlipList();
+  const eventTrace = useEventLoopTrace();
 
   const accRef = useRef<Partial<PipelineRecord>>({});
   const t0Ref = useRef(0);
-  const intentRef = useRef<FlipIntent>({ exitIds: new Set(), hideIds: new Set(), enterIds: new Set(), changeIds: new Set() });
+  const intentRef = useRef<FlipIntent>({
+    exitIds: new Set(),
+    hideIds: new Set(),
+    enterIds: new Set(),
+    changeIds: new Set(),
+  });
   const windowOpenRef = useRef(false);
   /** 当前打开的统计窗口所属的操作轮次（= version）；迟到回调据此丢弃 */
   const activeRoundRef = useRef(0);
   const timeoutIdRef = useRef(0);
-  const commitsRef = useRef<Array<{ commitTime: number; actualDuration: number }>>([]);
+  const commitsRef = useRef<
+    Array<{ commitTime: number; actualDuration: number }>
+  >([]);
 
   /** 统计窗口内的可见列表：过滤命中的 + 正在离场的（保持挂载以播完坍缩动画） */
   const listTodos = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return todos.filter((t) => t.exiting || t.hidden || q === '' || t.text.toLowerCase().includes(q));
+    return todos.filter(
+      (t) =>
+        t.exiting || t.hidden || q === '' || t.text.toLowerCase().includes(q),
+    );
   }, [todos, query]);
 
   /** 关窗出数：汇总一条流水线记录（轮次不符 = 迟到回调，直接丢弃） */
@@ -63,13 +97,16 @@ export function FiberTodoPage() {
       windowOpenRef.current = false;
       window.clearTimeout(timeoutIdRef.current);
 
+      const trace = eventTrace.finish();
       const diff = closeWindow();
       const frames = stopFrames();
       const commits = commitsRef.current;
       commitsRef.current = [];
       const acc = accRef.current;
 
-      const renderMs = Math.round(commits.reduce((s, c) => s + c.actualDuration, 0) * 100) / 100;
+      const renderMs =
+        Math.round(commits.reduce((s, c) => s + c.actualDuration, 0) * 100) /
+        100;
       const firstCommit = commits[0];
 
       if (!diff && commits.length === 0) return; // 无有效数据（如空操作）
@@ -79,6 +116,8 @@ export function FiberTodoPage() {
       const record: PipelineRecord = {
         seq: acc.seq ?? 0,
         op: acc.op ?? 'unknown',
+        operationId: trace?.operationId ?? `todo-unknown-${acc.seq ?? 0}`,
+        source: trace?.source,
         t0: t0Ref.current,
         triggerToCommitMs:
           firstCommit !== undefined
@@ -100,10 +139,16 @@ export function FiberTodoPage() {
             ? null
             : inserted === flipStats.entered && removed === flipStats.exited
           : null,
+        trace: trace ?? {
+          operationId: `todo-unknown-${acc.seq ?? 0}`,
+          events: [],
+          longTasks: [],
+          heap: { supported: false },
+        },
       };
       setRecords((prev) => [record, ...prev].slice(0, MAX_RECORDS));
     },
-    [closeWindow, stopFrames]
+    [closeWindow, stopFrames, eventTrace],
   );
 
   /** 开新窗口：上一窗口未关则按其轮次强制出数（动画被打断的场景） */
@@ -117,7 +162,19 @@ export function FiberTodoPage() {
       activeRoundRef.current = round;
       t0Ref.current = performance.now();
       accRef.current = { seq, op };
-      intentRef.current = { exitIds: new Set(), hideIds: new Set(), enterIds: new Set(), changeIds: new Set() };
+      eventTrace.start(op, {
+        file: 'src/components/fiber-todo/FiberTodoPage.tsx',
+        functionName: 'beginOp',
+        line: 109,
+      });
+      eventTrace.scheduleMicrotask();
+      eventTrace.scheduleRaf();
+      intentRef.current = {
+        exitIds: new Set(),
+        hideIds: new Set(),
+        enterIds: new Set(),
+        changeIds: new Set(),
+      };
       commitsRef.current = [];
       openWindow();
       startFrames();
@@ -127,7 +184,7 @@ export function FiberTodoPage() {
         finalizeWindow(round, EMPTY_STATS, true); // 超时=截断轮
       }, WINDOW_TIMEOUT_MS);
     },
-    [finalizeWindow, openWindow, startFrames, capture]
+    [finalizeWindow, openWindow, startFrames, capture],
   );
 
   /** Flip 全部动画结束：清理 exiting 项（基于 state 而非本轮 intent，被中断轮遗留项一并回收），再 +2 帧宽限关窗 */
@@ -136,18 +193,27 @@ export function FiberTodoPage() {
       if (round !== activeRoundRef.current) return; // 被打断轮次的迟到回调，丢弃
       // 无 exiting 时返回原引用，React bail out，不产生多余 commit
       // hidden 项不属于清理对象（由筛选恢复）
-      setTodos((prev) => (prev.some((t) => t.exiting) ? prev.filter((t) => !t.exiting) : prev));
+      setTodos((prev) =>
+        prev.some((t) => t.exiting) ? prev.filter((t) => !t.exiting) : prev,
+      );
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
           finalizeWindow(round, stats);
-        })
+        }),
       );
     },
-    [finalizeWindow]
+    [finalizeWindow],
   );
 
   const handleProfilerRender = useCallback(
-    (info: { actualDuration: number; commitTime: number }) => {
+    (info: {
+      id: string;
+      phase: 'mount' | 'update' | 'nested-update';
+      actualDuration: number;
+      baseDuration: number;
+      startTime: number;
+      commitTime: number;
+    }) => {
       // 注：生产构建下 Profiler onRender 不触发，triggerToCommitMs=-1 / renderMs=0 属预期
       if (!windowOpenRef.current) return; // keyMode 切换等非操作 commit 不计
       const commits = commitsRef.current;
@@ -155,7 +221,7 @@ export function FiberTodoPage() {
       if (last && last.commitTime === info.commitTime) return; // StrictMode/重复去重
       commits.push(info);
     },
-    []
+    [],
   );
 
   const bump = () => setVersion(activeRoundRef.current);
@@ -164,7 +230,11 @@ export function FiberTodoPage() {
     const text = draft.trim();
     if (!text) return;
     beginOp(`add "${text.slice(0, 10)}"`);
-    setTodos((prev) => prev.filter((t) => !t.exiting).concat({ id: makeId(), text, done: false }));
+    setTodos((prev) =>
+      prev
+        .filter((t) => !t.exiting)
+        .concat({ id: makeId(), text, done: false }),
+    );
     setDraft('');
     bump();
   };
@@ -173,7 +243,9 @@ export function FiberTodoPage() {
     beginOp('remove');
     intentRef.current.exitIds.add(id);
     setTodos((prev) =>
-      prev.filter((t) => !t.exiting).map((t) => (t.id === id ? { ...t, exiting: true } : t))
+      prev
+        .filter((t) => !t.exiting)
+        .map((t) => (t.id === id ? { ...t, exiting: true } : t)),
     );
     bump();
   };
@@ -182,7 +254,9 @@ export function FiberTodoPage() {
     beginOp('toggle');
     intentRef.current.changeIds.add(id);
     setTodos((prev) =>
-      prev.filter((t) => !t.exiting).map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+      prev
+        .filter((t) => !t.exiting)
+        .map((t) => (t.id === id ? { ...t, done: !t.done } : t)),
     );
     bump();
   };
@@ -190,7 +264,11 @@ export function FiberTodoPage() {
   const edit = (id: string, text: string) => {
     beginOp(`edit "${text.slice(0, 10)}"`);
     intentRef.current.changeIds.add(id);
-    setTodos((prev) => prev.filter((t) => !t.exiting).map((t) => (t.id === id ? { ...t, text } : t)));
+    setTodos((prev) =>
+      prev
+        .filter((t) => !t.exiting)
+        .map((t) => (t.id === id ? { ...t, text } : t)),
+    );
     bump();
   };
 
@@ -200,7 +278,9 @@ export function FiberTodoPage() {
       // 槽位内容变化 → 高亮（index key 下无位移，内容原地变）
       const base = todos.filter((t) => !t.exiting);
       const changed = new Set(
-        next.filter((t, i) => base[i] !== undefined && base[i].id !== t.id).map((t) => t.id)
+        next
+          .filter((t, i) => base[i] !== undefined && base[i].id !== t.id)
+          .map((t) => t.id),
       );
       intentRef.current.changeIds = changed;
     }
@@ -268,8 +348,8 @@ export function FiberTodoPage() {
       <header className={styles.header}>
         <h1 className={styles.title}>React Fiber · 增删改查真实 DOM 动画</h1>
         <p className={styles.subtitle}>
-          每次 CRUD → render → reconcile(diff) → commit → 真实 DOM 变化，动画由 Flip 快照严格驱动，统计窗口对照
-          MutationObserver 验证"演的就是真的"
+          每次 CRUD → render → reconcile(diff) → commit → 真实 DOM 变化，动画由
+          Flip 快照严格驱动，统计窗口对照 MutationObserver 验证"演的就是真的"
         </p>
       </header>
 
@@ -299,19 +379,35 @@ export function FiberTodoPage() {
                 runFilter(e.target.value);
               }}
             />
-            <button type="button" className={`${styles.btn} ${styles.ghost}`} onClick={shuffle}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.ghost}`}
+              onClick={shuffle}
+            >
               洗牌
             </button>
-            <button type="button" className={`${styles.btn} ${styles.ghost}`} onClick={sortByDone}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.ghost}`}
+              onClick={sortByDone}
+            >
               按完成排序
             </button>
-            <button type="button" className={`${styles.btn} ${styles.warn}`} onClick={stress}>
+            <button
+              type="button"
+              className={`${styles.btn} ${styles.warn}`}
+              onClick={stress}
+            >
               压测 +100
             </button>
           </div>
           <div className={styles.row}>
             <span className={styles.muted}>key 策略：</span>
-            <div className={styles.switch} role="group" aria-label="key 策略切换">
+            <div
+              className={styles.switch}
+              role="group"
+              aria-label="key 策略切换"
+            >
               <button
                 type="button"
                 className={`${styles.switchBtn} ${keyMode === 'id' ? styles.active : ''}`}
@@ -348,6 +444,7 @@ export function FiberTodoPage() {
         <div className={styles.panels}>
           <FiberDiffPanel records={records} supported={supported} />
           <RenderPipelinePanel record={records[0] ?? null} />
+          <EventLoopTracePanel record={records[0] ?? null} />
         </div>
       </div>
     </div>

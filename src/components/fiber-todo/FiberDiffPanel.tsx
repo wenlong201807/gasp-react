@@ -1,5 +1,5 @@
-import type { PipelineRecord } from './types';
 import styles from './FiberTodo.module.css';
+import type { PipelineRecord } from './types';
 
 interface FiberDiffPanelProps {
   records: PipelineRecord[];
@@ -13,7 +13,9 @@ export function FiberDiffPanel({ records, supported }: FiberDiffPanelProps) {
     <section className={styles.panel} aria-label="Fiber Diff 统计">
       <h3 className={styles.panelTitle}>Fiber Diff · 真实 DOM 变更 vs 动画</h3>
       {!supported && (
-        <p className={styles.hint}>当前浏览器不支持 MutationObserver，本面板统计不可用</p>
+        <p className={styles.hint}>
+          当前浏览器不支持 MutationObserver，本面板统计不可用
+        </p>
       )}
       {latest ? (
         <>
@@ -58,7 +60,9 @@ export function FiberDiffPanel({ records, supported }: FiberDiffPanelProps) {
               </tr>
             </tbody>
           </table>
-          <span className={`${styles.tag} ${latest.consistent ? styles.ok : styles.bad}`}>
+          <span
+            className={`${styles.tag} ${latest.consistent ? styles.ok : styles.bad}`}
+          >
             {latest.consistent === null
               ? '统计不可用'
               : latest.consistent
@@ -81,7 +85,9 @@ export function FiberDiffPanel({ records, supported }: FiberDiffPanelProps) {
           )}
         </>
       ) : (
-        <p className={styles.hint}>执行任意增删改查操作后，这里展示本次 Fiber commit 的真实变更统计</p>
+        <p className={styles.hint}>
+          执行任意增删改查操作后，这里展示本次 Fiber commit 的真实变更统计
+        </p>
       )}
     </section>
   );

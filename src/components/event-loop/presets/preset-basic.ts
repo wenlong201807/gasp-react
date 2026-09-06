@@ -1,0 +1,231 @@
+import type { Preset } from '../types';
+import { q, sf, step, timer, withIds } from './helpers.ts';
+
+const CODE = `console.log('1: sync');
+setTimeout(() => {
+  console.log('4: timeout');
+}, 0);
+Promise.resolve().then(() => {
+  console.log('3: then');
+});
+console.log('2: sync end');`;
+
+// consoleLines 是累计快照：每一步都必须携带截至该步的全部输出
+const OUT1 = ['1: sync'];
+const OUT2 = [...OUT1, '2: sync end'];
+const OUT3 = [...OUT2, '3: then'];
+const OUT4 = [...OUT3, '4: timeout'];
+
+export const presetBasic: Preset = {
+	id: 'basic',
+	title: '入门 · 宏任务 vs 微任务',
+	difficulty: 1,
+	code: CODE,
+	expectedOutput: OUT4,
+	trace: withIds([
+		step({
+			title: '整个脚本(script)本身就是一个宏任务，先进入宏任务队列',
+			phase: 'task',
+			macro: [q('script', 'script', 'macro')],
+			active: ['macro'],
+		}),
+		step({
+			title: 'script 出队，压入调用栈开始执行',
+			phase: 'task',
+			line: 1,
+			ev: 'dequeue',
+			stack: [sf('script', 'script')],
+			active: ['stack', 'code'],
+		}),
+		step({
+			title: "console.log('1: sync') 入栈",
+			phase: 'task',
+			line: 1,
+			ev: 'push',
+			stack: [sf('script', 'script'), sf('log-1', 'log')],
+			active: ['stack', 'code'],
+		}),
+		step({
+			title: '打印 1: sync，log 出栈',
+			phase: 'task',
+			line: 1,
+			ev: 'pop',
+			stack: [sf('script', 'script')],
+			console: OUT1,
+			active: ['console'],
+		}),
+		step({
+			title: '遇到 setTimeout：回调交给 Web APIs 计时 0ms',
+			phase: 'task',
+			line: 2,
+			ev: 'enqueue',
+			stack: [sf('script', 'script')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT1,
+			active: ['code', 'webapis'],
+		}),
+		step({
+			title: '遇到 Promise.then：Promise 已决议，回调直接进入微任务队列',
+			phase: 'task',
+			line: 5,
+			ev: 'enqueue',
+			stack: [sf('script', 'script')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			micro: [q('cb-then', 'then 回调', 'micro')],
+			console: OUT1,
+			active: ['code', 'micro'],
+		}),
+		step({
+			title: "console.log('2: sync end') 入栈",
+			phase: 'task',
+			line: 8,
+			ev: 'push',
+			stack: [sf('script', 'script'), sf('log-2', 'log')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			micro: [q('cb-then', 'then 回调', 'micro')],
+			console: OUT1,
+			active: ['stack', 'code'],
+		}),
+		step({
+			title: '打印 2: sync end',
+			phase: 'task',
+			line: 8,
+			ev: 'pop',
+			stack: [sf('script', 'script')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			micro: [q('cb-then', 'then 回调', 'micro')],
+			console: OUT2,
+			active: ['console'],
+		}),
+		step({
+			title: 'script 执行完毕，出栈',
+			phase: 'task',
+			ev: 'pop',
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			micro: [q('cb-then', 'then 回调', 'micro')],
+			console: OUT2,
+			active: ['stack'],
+		}),
+		step({
+			title: '任务结束，检查微任务队列：非空，逐个清空',
+			phase: 'microtask',
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			micro: [q('cb-then', 'then 回调', 'micro')],
+			console: OUT2,
+			active: ['micro'],
+		}),
+		step({
+			title: 'then 回调出队，压栈执行',
+			phase: 'microtask',
+			line: 6,
+			ev: 'dequeue',
+			stack: [sf('cb-then', 'then 回调')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT2,
+			active: ['micro', 'stack', 'code'],
+		}),
+		step({
+			title: "console.log('3: then') 入栈",
+			phase: 'microtask',
+			line: 6,
+			ev: 'push',
+			stack: [sf('cb-then', 'then 回调'), sf('log-3', 'log')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT2,
+			active: ['stack'],
+		}),
+		step({
+			title: '打印 3: then',
+			phase: 'microtask',
+			line: 6,
+			ev: 'pop',
+			stack: [sf('cb-then', 'then 回调')],
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT3,
+			active: ['console'],
+		}),
+		step({
+			title: 'then 回调执行完，出栈',
+			phase: 'microtask',
+			ev: 'pop',
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT3,
+			active: ['stack'],
+		}),
+		step({
+			title: '微任务队列已空',
+			phase: 'microtask',
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT3,
+			active: ['micro'],
+		}),
+		step({
+			title: '渲染机会：本例无 rAF，浏览器可能跳过绘制',
+			phase: 'render',
+			webApis: [timer('cb-timeout', 'timer(0ms)')],
+			console: OUT3,
+			active: ['render'],
+		}),
+		step({
+			title: 'timer(0ms) 已到点，回调进入宏任务队列',
+			phase: 'task',
+			line: 2,
+			ev: 'enqueue',
+			macro: [q('cb-timeout', 'timeout 回调', 'macro')],
+			console: OUT3,
+			active: ['webapis', 'macro'],
+		}),
+		step({
+			title: '新一轮循环：宏任务出队，压栈',
+			phase: 'task',
+			line: 3,
+			ev: 'dequeue',
+			stack: [sf('cb-timeout', 'timeout 回调')],
+			console: OUT3,
+			active: ['macro', 'stack', 'code'],
+		}),
+		step({
+			title: "console.log('4: timeout') 入栈",
+			phase: 'task',
+			line: 3,
+			ev: 'push',
+			stack: [sf('cb-timeout', 'timeout 回调'), sf('log-4', 'log')],
+			console: OUT3,
+			active: ['stack', 'code'],
+		}),
+		step({
+			title: '打印 4: timeout',
+			phase: 'task',
+			line: 3,
+			ev: 'pop',
+			stack: [sf('cb-timeout', 'timeout 回调')],
+			console: OUT4,
+			active: ['console'],
+		}),
+		step({
+			title: '回调执行完，出栈',
+			phase: 'task',
+			ev: 'pop',
+			console: OUT4,
+			active: ['stack'],
+		}),
+		step({
+			title: '微任务队列已空，快速通过',
+			phase: 'microtask',
+			console: OUT4,
+			active: ['micro'],
+		}),
+		step({
+			title: '渲染机会：无 rAF，跳过',
+			phase: 'render',
+			console: OUT4,
+			active: ['render'],
+		}),
+		step({
+			title: '队列全空，事件循环空闲——演示结束',
+			phase: 'task',
+			console: OUT4,
+			active: [],
+		}),
+	]),
+};

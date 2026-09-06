@@ -1,0 +1,23 @@
+{
+  "files": {
+    "includes": ["src/**", "vite.config.ts"]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false
+    }
+  },
+  "formatter": {
+    "enabled": true
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "es5",
+      "arrowParentheses": "always",
+      "semicolons": "always",
+      "lineWidth": 100
+    }
+  }
+}

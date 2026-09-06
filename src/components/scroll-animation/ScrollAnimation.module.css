@@ -1,108 +1,108 @@
 .container {
-  min-height: 300vh;
-  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+	min-height: 300vh;
+	background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
 }
 
 .section {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 4rem;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 4rem;
 }
 
 .hero {
-  text-align: center;
+	text-align: center;
 }
 
 .title {
-  font-size: 5rem;
-  font-weight: 800;
-  color: #fff;
-  margin: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  will-change: transform, opacity;
+	font-size: 5rem;
+	font-weight: 800;
+	color: #fff;
+	margin: 0;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	will-change: transform, opacity;
 }
 
 .subtitle {
-  font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.7);
-  margin-top: 1rem;
+	font-size: 1.5rem;
+	color: rgba(255, 255, 255, 0.7);
+	margin-top: 1rem;
 }
 
 .content {
-  max-width: 600px;
-  text-align: center;
-  color: #fff;
+	max-width: 600px;
+	text-align: center;
+	color: #fff;
 }
 
 .content h2 {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+	font-size: 3rem;
+	margin-bottom: 1rem;
+	background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 }
 
 .content p {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
+	font-size: 1.25rem;
+	color: rgba(255, 255, 255, 0.8);
+	line-height: 1.6;
 }
 
 .cards {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  max-width: 800px;
-  width: 100%;
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 2rem;
+	max-width: 800px;
+	width: 100%;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 16px;
-  padding: 2rem;
-  text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  will-change: transform, opacity;
-  transition: transform 0.3s ease;
+	background: rgba(255, 255, 255, 0.1);
+	backdrop-filter: blur(10px);
+	border-radius: 16px;
+	padding: 2rem;
+	text-align: center;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	will-change: transform, opacity;
+	transition: transform 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-5px);
+	transform: translateY(-5px);
 }
 
 .cardNumber {
-  font-size: 3rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+	font-size: 3rem;
+	font-weight: 800;
+	background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
 }
 
 .card h3 {
-  color: #fff;
-  margin: 1rem 0 0.5rem;
+	color: #fff;
+	margin: 1rem 0 0.5rem;
 }
 
 .card p {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 0.9rem;
+	color: rgba(255, 255, 255, 0.6);
+	font-size: 0.9rem;
 }
 
 @media (max-width: 768px) {
-  .title {
-    font-size: 3rem;
-  }
+	.title {
+		font-size: 3rem;
+	}
 
-  .cards {
-    grid-template-columns: 1fr;
-  }
+	.cards {
+		grid-template-columns: 1fr;
+	}
 }

@@ -1,21 +1,16 @@
-import { useRef, useEffect } from 'react';
-import { gsap } from '@/utils/gsap';
+import { useEffect, useRef } from 'react';
 import { useGSAP } from '@/hooks/useGSAP';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { gsap } from '@/utils/gsap';
 import styles from './AnimationControls.module.css';
 
 const animations = [
   { id: 'menu', label: '主菜单', icon: '🏠' },
   { id: 'scroll', label: '滚动动画', icon: '📜' },
   { id: 'lottie', label: 'Lottie动画', icon: '🎨' },
-  { id: 'fireworks', label: '烟花特效', icon: '🎆' },
-  { id: 'dance', label: '舞蹈特效', icon: '💃' },
-  { id: 'particle-text', label: '粒子文字', icon: '✨' },
-  { id: 'star', label: '星空背景', icon: '⭐' },
-  { id: 'countdown', label: '倒计时爆炸', icon: '⏰' },
-  { id: 'flame', label: '火焰文字', icon: '🔥' },
-  { id: 'particle-progress', label: '粒子进度条', icon: '📊' },
   { id: 'fiber-todo', label: 'Fiber Todo', icon: '🧬' },
+  { id: 'event-loop', label: '事件循环', icon: '🔄' },
+  { id: 'url-lifecycle', label: 'URL生命周期', icon: '🌐' },
 ];
 
 interface AnimationControlsProps {
@@ -23,7 +18,10 @@ interface AnimationControlsProps {
   currentAnimation: string;
 }
 
-export function AnimationControls({ onAnimationChange, currentAnimation }: AnimationControlsProps) {
+export function AnimationControls({
+  onAnimationChange,
+  currentAnimation,
+}: AnimationControlsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { contextSafe } = useGSAP();
   const { recordLCP, recordFID, recordCLS } = usePerformanceMonitor();
@@ -47,7 +45,7 @@ export function AnimationControls({ onAnimationChange, currentAnimation }: Anima
           opacity: 1,
           duration: 0.8,
           ease: 'power3.out',
-        }
+        },
       );
 
       gsap.to(container, {
