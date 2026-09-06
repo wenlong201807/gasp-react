@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { CameraMode, DrivingState, EngineStats, TimeOfDay } from '../types';
 import { CameraRig } from './CameraRig';
+import { CarSystem } from './CarSystem';
 import { CitySystem } from './CitySystem';
 import { DayNightSystem } from './DayNightSystem';
 import { RoadSystem } from './RoadSystem';
@@ -10,19 +11,14 @@ export type EngineSnapshot = EngineStats & DrivingState;
 
 export type StatsListener = (snapshot: EngineSnapshot) => void;
 
-/** Task 5 CarSystem 将实现的车灯接口（本任务先以空值保护形式预留联动） */
-interface CarLightControllable {
-	setLights(on: boolean): void;
-}
-
 const STATS_INTERVAL_MS = 200; // 5Hz
 const MAX_DT_SEC = 0.1; // 切后台回来防止 dt 跳变
 
 /**
  * three-car-nav 引擎。
  * 生命周期：new(container) → start() → [RAF render] → dispose()
- * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem（光照唯一所有者）。
- * 后续任务将接入 CarSystem / TrafficSystem / HudSystem。
+ * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem。
+ * 后续任务将接入 TrafficSystem / HudSystem。
  */
 export class ThreeCarNavEngine {
 	readonly state: DrivingState = {
@@ -47,10 +43,9 @@ export class ThreeCarNavEngine {
 	private renderer: THREE.WebGLRenderer;
 	private roadSystem: RoadSystem;
 	private citySystem: CitySystem;
+	private carSystem: CarSystem;
 	private dayNightSystem: DayNightSystem;
 	private cameraRig: CameraRig;
-	/** Task 5 CarSystem 接入点：DayNightSystem 经空值保护调用其车灯接口 */
-	private carSystem: CarLightControllable | null = null;
 	private clock = new THREE.Clock();
 	private running = false;
 	private listeners = new Set<StatsListener>();
@@ -67,13 +62,22 @@ export class ThreeCarNavEngine {
 
 		this.roadSystem = new RoadSystem(this.scene);
 		this.citySystem = new CitySystem(this.scene);
+		// CarSystem 必须在 DayNightSystem 之前创建：DayNight 需要把车灯联动出口接给它
+		this.carSystem = new CarSystem(this.scene);
+		// 订阅 modelStatus 变化并回写到 engine.stats（React 端通过 onStats 拿到）
+		this.carSystem.onStatus((s) => {
+			this.stats = { ...this.stats, modelStatus: s.modelStatus };
+		});
 
-		/* 光照/背景/雾归 DayNightSystem 所有：构造即以 dusk 满值起步并同步路灯/窗灯联动 */
+		/* 光照/背景/雾归 DayNightSystem 所有：构造即以 dusk 满值起步并同步路灯/窗灯/车灯联动 */
 		this.dayNightSystem = new DayNightSystem(this.scene, this.renderer, {
 			setLampsOn: (on) => this.roadSystem.setLampsOn(on),
 			setWindowGlow: (k) => this.citySystem.setWindowGlow(k),
-			setCarLights: (on) => this.carSystem?.setLights(on), // Task 5 前恒为空调用
+			setCarLights: (on) => this.carSystem.setLights(on),
 		});
+		// 立即同步当前 dusk 默认 lampsOn 状态到 carSystem
+		this.carSystem.setLights(this.dayNightSystem.lampsOn);
+
 		this.cameraRig = new CameraRig(this.camera, this.state.cameraMode);
 
 		container.appendChild(this.renderer.domElement);
@@ -107,6 +111,7 @@ export class ThreeCarNavEngine {
 		// 子系统先自释放（几何/材质/纹理/灯光全清）并从场景摘除
 		this.roadSystem.dispose();
 		this.citySystem.dispose();
+		this.carSystem.dispose();
 		this.dayNightSystem.dispose();
 		this.cameraRig.dispose();
 
@@ -148,17 +153,12 @@ export class ThreeCarNavEngine {
 		this.state.timeOfDay = t; // DayNightSystem 每帧检测变化并启动 1.5s 过渡
 	}
 
-	/** Task 5 落地 CarSystem 后调用：接入车灯联动并立即同步当前档位开关状态 */
-	attachCarSystem(car: CarLightControllable): void {
-		this.carSystem = car;
-		car.setLights(this.dayNightSystem.lampsOn);
-	}
-
 	private tick = (): void => {
 		if (!this.running) return;
 		const dt = Math.min(this.clock.getDelta(), MAX_DT_SEC);
 		this.roadSystem.update(dt, this.state);
 		this.citySystem.update(dt, this.state);
+		this.carSystem.update(dt, this.state);
 		this.dayNightSystem.update(dt, this.state);
 		this.cameraRig.update(dt, this.state); // 相机最后更新，反映当帧最新状态
 		this.emitStats();
