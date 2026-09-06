@@ -103,14 +103,14 @@ export interface EngineControls {
 - Create: engine/CameraRig.ts、engine/DayNightSystem.ts
 - Modify: ThreeCarNavEngine.ts（接入；engine 持有唯一 state 并把 set* 方法接到 rig/daynight）
 
-- [ ] Step 1: CameraRig 位姿（锁定，lerp 系数 1-exp(-4dt)）：chase pos(0,3.2,8.5)→lookAt(0,1.2,-6)；driver pos(-0.35,1.25,-0.3)→lookAt(-0.35,1.15,-10)；side pos(7.5,1.6,1.5)→lookAt(0,0.9,-1)。update(dt, state.cameraMode) 每帧插值 position + 用四元数/lookAt 目标点插值过渡
-- [ ] Step 2: DayNightSystem 三档参数（锁定）：
+- [x] Step 1: CameraRig 位姿（锁定，lerp 系数 1-exp(-4dt)）：chase pos(0,3.2,8.5)→lookAt(0,1.2,-6)；driver pos(-0.35,1.25,-0.3)→lookAt(-0.35,1.15,-10)；side pos(7.5,1.6,1.5)→lookAt(0,0.9,-1)。update(dt, state.cameraMode) 每帧插值 position + 用四元数/lookAt 目标点插值过渡
+- [x] Step 2: DayNightSystem 三档参数（锁定）：
   - dusk: bg/fog #2a2340（fog 60→420）、hemi 0.55(#ffd9a0/#3a3550)、dir 1.1 #ff9a5c pos(-40,50,20)、窗灯 0.55、路灯/车灯开
   - day: bg/fog #aac7e8、hemi 0.9(#ffffff/#8fa3bf)、dir 1.5 #fff4e0、窗灯 0、路灯/车灯关
   - night: bg/fog #0b1026（fog 40→300）、hemi 0.25(#4a5a8a/#111322)、dir 0.3 #8aa2ff、窗灯 1、路灯/车灯开
   - 切换 1.5s 全参数 lerp；联动 CitySystem.setWindowGlow 与 Task 5 车灯接口（先留接口调用，车灯在 Task 5 实现）
-- [ ] Step 3: 验证：lint+build；Playwright 经 __threeCarNav.getState() 断言 setCameraMode/setTimeOfDay 生效；三档 × 三视角关键截图
-- [ ] Step 4: commit `feat(three-car-nav): camera rig with 3 modes and day-night interpolation`
+- [x] Step 3: 验证：lint+build；Playwright 经 __threeCarNav.getState() 断言 setCameraMode/setTimeOfDay 生效；三档 × 三视角关键截图
+- [x] Step 4: commit `feat(three-car-nav): camera rig with 3 modes and day-night interpolation`
 
 ### Task 5: CarSystem（SU7 + fallback + 车轮 + 微动）
 
