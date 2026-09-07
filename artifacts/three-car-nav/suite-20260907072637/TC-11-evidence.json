@@ -1,0 +1,52 @@
+{
+  "model0": {
+    "status": "ready",
+    "elapsedSec": 3.21,
+    "history": [
+      [
+        "loading",
+        0
+      ],
+      [
+        "ready",
+        3.21
+      ]
+    ]
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "awayCanvas": 0,
+      "backCanvas": 1,
+      "status": "ready",
+      "elapsedSec": 0.4
+    },
+    {
+      "round": 2,
+      "awayCanvas": 0,
+      "backCanvas": 1,
+      "status": "ready",
+      "elapsedSec": 0.4
+    }
+  ],
+  "context": {
+    "lost": {
+      "d0": 9.413333334525428,
+      "f0": 57,
+      "d1": 9.413333334525428,
+      "f1": 57,
+      "d2": 9.413333334525428,
+      "f2": 57,
+      "canvasAfterLost": 1
+    },
+    "restored": {
+      "distanceM": 35.51500000158945,
+      "fps": 60,
+      "modelStatus": "ready"
+    }
+  },
+  "nonNetwork": [],
+  "network": 0,
+  "pageErrors": [],
+  "webglUnavailableNote": "headless 无法禁用 WebGL，降级卡片为代码走查项（cases.md TC-11 ③）"
+}

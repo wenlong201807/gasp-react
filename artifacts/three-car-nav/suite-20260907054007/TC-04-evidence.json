@@ -1,0 +1,172 @@
+{
+  "wheelFound": {
+    "rear": {
+      "n": 6160,
+      "cx": 1028.5,
+      "cy": 994.2,
+      "bbox": {
+        "x0": 950,
+        "y0": 952,
+        "x1": 1130,
+        "y1": 1041,
+        "w": 181,
+        "h": 90
+      }
+    },
+    "front": {
+      "n": 6561,
+      "cx": 1405.3,
+      "cy": 988.4,
+      "bbox": {
+        "x0": 1330,
+        "y0": 940,
+        "x1": 1504,
+        "y1": 1041,
+        "w": 175,
+        "h": 102
+      }
+    }
+  },
+  "rear": {
+    "box": {
+      "x0": 983,
+      "y0": 948,
+      "x1": 1075,
+      "y1": 1040
+    },
+    "centroids": [
+      [
+        1023.1,
+        991.3
+      ],
+      [
+        1023.5,
+        991.2
+      ],
+      [
+        1023.4,
+        991.2
+      ]
+    ],
+    "driftPx": 0.41,
+    "tireRatio": [
+      0.5609,
+      0.5631,
+      0.5654
+    ],
+    "centreOffsetPx": 6.5,
+    "rimBrightRatio": [
+      0.1779,
+      0.1731,
+      0.1744
+    ],
+    "rimOscillation": 0.0048,
+    "diff": [
+      {
+        "meanAbs": 0.0111,
+        "changedRatio": 0.063,
+        "pixels": 8649
+      },
+      {
+        "meanAbs": 0.0059,
+        "changedRatio": 0.033,
+        "pixels": 8649
+      }
+    ]
+  },
+  "front": {
+    "box": {
+      "x0": 1359,
+      "y0": 942,
+      "x1": 1451,
+      "y1": 1034
+    },
+    "centroids": [
+      [
+        1401.7,
+        990
+      ],
+      [
+        1402,
+        990
+      ],
+      [
+        1401.7,
+        990
+      ]
+    ],
+    "driftPx": 0.3,
+    "tireRatio": [
+      0.5512,
+      0.5499,
+      0.5447
+    ],
+    "centreOffsetPx": 3.9,
+    "rimBrightRatio": [
+      0.2529,
+      0.2487,
+      0.3041
+    ],
+    "rimOscillation": 0.0554,
+    "diff": [
+      {
+        "meanAbs": 0.0115,
+        "changedRatio": 0.0634,
+        "pixels": 8649
+      },
+      {
+        "meanAbs": 0.0417,
+        "changedRatio": 0.0894,
+        "pixels": 8649
+      }
+    ]
+  },
+  "bodyDiff": [
+    {
+      "meanAbs": 0.004,
+      "changedRatio": 0.0161,
+      "pixels": 10011
+    },
+    {
+      "meanAbs": 0.0032,
+      "changedRatio": 0.0137,
+      "pixels": 10011
+    }
+  ],
+  "envelope": {
+    "dark": [
+      31323,
+      31281,
+      31342
+    ],
+    "paint": [
+      48899,
+      48893,
+      48899
+    ]
+  },
+  "wheelVsBody": {
+    "rear": 2.13,
+    "front": 6.65
+  },
+  "sideViews": {
+    "ranked": [
+      {
+        "i": 14,
+        "ratio": 0.0849,
+        "t": 16211
+      },
+      {
+        "i": 4,
+        "ratio": 0.0785,
+        "t": 8895
+      }
+    ],
+    "sideA": {
+      "i": 14,
+      "ratio": 0.0849,
+      "t": 16211
+    },
+    "sideB": null
+  }
+}

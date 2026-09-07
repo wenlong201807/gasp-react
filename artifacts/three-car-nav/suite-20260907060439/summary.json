@@ -1,0 +1,14 @@
+{
+  "stamp": "20260907060439",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-08",
+      "name": "拖拽",
+      "pass": false,
+      "note": "用例异常：TypeError: Cannot read properties of undefined (reading 'meanAbs') |     at Module.run (file:///Users/zhuwenlong/Desktop/ai-study/gasp-react/script/three-car-nav/tests/tc08-drag.mjs:60:38)",
+      "evidence": [],
+      "durS": 10.4
+    }
+  ]
+}

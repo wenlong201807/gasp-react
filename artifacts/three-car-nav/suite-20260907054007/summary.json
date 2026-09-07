@@ -1,0 +1,46 @@
+{
+  "stamp": "20260907054007",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-03",
+      "name": "CDN 降级",
+      "pass": false,
+      "note": "场景未在滚动渲染 nonbg=0.279 diffDash=0.0094",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-03-cdn-abort-fallback.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-03-evidence.json"
+      ],
+      "durS": 20.2
+    },
+    {
+      "id": "TC-04",
+      "name": "轮位/辐条",
+      "pass": false,
+      "note": "360° 视口未在扫描窗口内捕捉到两个对侧侧视",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-04-hud360-sideA.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-04-wheels.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-04-wheel-rear.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-04-wheel-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-04-evidence.json"
+      ],
+      "durS": 21.7
+    },
+    {
+      "id": "TC-05",
+      "name": "漆面存证",
+      "pass": true,
+      "note": "四区域裁剪已归档（车头/门板/车顶/前轮拱），平均色已记录",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-05-paint-hood-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-05-paint-door-side.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-05-paint-roof-greenhouse.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-05-paint-wheel-arch.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-05-paint-full.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054007/TC-05-evidence.json"
+      ],
+      "durS": 5.2
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "canvasCount": 1,
+  "modelStatus": "ready",
+  "modelStatusResolvedAfterSec": 2.92,
+  "modelStatusHistory": [
+    [
+      "loading",
+      0.0
+    ],
+    [
+      "ready",
+      2.92
+    ]
+  ],
+  "state1": {
+    "modelStatus": "ready",
+    "fps": 6,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -45.04274140290584
+      },
+      {
+        "relX": 3.5,
+        "relZ": 42.471343880253144
+      },
+      {
+        "relX": 17.5,
+        "relZ": -8.335854533737276
+      }
+    ]
+  },
+  "state2": {
+    "modelStatus": "ready",
+    "fps": 7,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -45.2550403930038
+      },
+      {
+        "relX": 3.5,
+        "relZ": 42.89839651049404
+      },
+      {
+        "relX": 17.5,
+        "relZ": 22.521850740057566
+      }
+    ]
+  },
+  "trafficNonEmpty": true,
+  "trafficChanged": true,
+  "networkConsoleErrors": [],
+  "nonNetworkConsoleErrors": [],
+  "failedRequests": []
+}

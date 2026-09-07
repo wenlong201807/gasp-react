@@ -1,0 +1,33 @@
+{
+  "abortedRequestCount": 2,
+  "canvasCount": 1,
+  "modelStatus": "fallback",
+  "modelStatusHistory": [
+    [
+      "fallback",
+      0.0
+    ]
+  ],
+  "loadingHintGone": true,
+  "networkConsoleErrors": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_FAILED"
+    }
+  ],
+  "nonNetworkConsoleErrors": [],
+  "failedRequests": [
+    {
+      "url": "https://z2586300277.github.io/3d-file-server/files/hdr/1k.hdr",
+      "failure": "net::ERR_FAILED"
+    },
+    {
+      "url": "https://z2586300277.github.io/3d-file-server/models/su7/sm_car.gltf",
+      "failure": "net::ERR_FAILED"
+    }
+  ]
+}

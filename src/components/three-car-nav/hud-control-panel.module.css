@@ -1,0 +1,222 @@
+/* 玻璃拟态控制台：写法对齐 menu-dock.module.css（背景/毛玻璃/圆角/阴影/active 渐变） */
+
+.panel {
+	position: absolute;
+	right: 24px;
+	bottom: 24px;
+	z-index: 2;
+	width: 264px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 14px;
+	background: #0a0a0feb;
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	color: var(--color-text-primary);
+	font-size: 12px;
+	user-select: none;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: rgba(255, 255, 255, 0.6);
+}
+
+.gear {
+	padding: 2px 8px;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-full);
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: rgba(255, 255, 255, 0.45);
+	white-space: nowrap;
+}
+
+.gear[data-gear="P"] {
+	border-color: #eab30866;
+	color: var(--color-warning);
+}
+
+.group {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.groupHead {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+}
+
+.groupLabel {
+	font-size: 11px;
+	color: rgba(255, 255, 255, 0.45);
+}
+
+.speedValue {
+	font-family: var(--font-mono);
+	font-size: 13px;
+	color: var(--color-text-primary);
+}
+
+.slider {
+	width: 100%;
+	margin: 0;
+	accent-color: var(--color-primary);
+	cursor: pointer;
+}
+
+.presets {
+	display: flex;
+	gap: 6px;
+}
+
+.presetBtn {
+	flex: 1;
+	padding: 5px 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font-family: var(--font-mono);
+	font-size: 11px;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.presetBtn:hover:not(:disabled),
+.presetBtn:focus-visible {
+	background: var(--color-bg-card);
+	border-color: #667eea73;
+	color: var(--color-text-primary);
+}
+
+.pauseBtn {
+	width: 100%;
+	padding: 8px 0;
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font-size: 12px;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.pauseBtn:hover,
+.pauseBtn:focus-visible {
+	background: var(--color-bg-card);
+	color: var(--color-text-primary);
+}
+
+.pauseBtnActive {
+	border-color: #eab30866;
+	color: var(--color-warning);
+}
+
+.chips {
+	display: flex;
+	gap: 6px;
+}
+
+.chip {
+	flex: 1;
+	padding: 6px 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--color-text-secondary);
+	font-size: 11px;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.chip:hover,
+.chip:focus-visible {
+	background: var(--color-bg-card);
+	border-color: var(--color-border);
+	color: var(--color-text-primary);
+}
+
+.chipActive {
+	background: linear-gradient(135deg, #667eea38, #764ba238);
+	border-color: #667eea73;
+	color: var(--color-text-primary);
+}
+
+.slider:disabled,
+.presetBtn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.presetBtn,
+	.pauseBtn,
+	.chip {
+		transition: none;
+	}
+}
+
+/* Task 9：WebGL 不可用降级卡片（复用本面板的玻璃拟态语言，居中提示） */
+
+.webglFallback {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	box-sizing: border-box;
+	padding: 32px 44px;
+	background: #0a0a0feb;
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	text-align: center;
+	user-select: none;
+}
+
+.webglFallbackTitle {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	color: var(--color-text-primary);
+}
+
+.webglFallbackHint {
+	margin: 0;
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.5);
+}

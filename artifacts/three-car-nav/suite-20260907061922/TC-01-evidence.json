@@ -1,0 +1,44 @@
+{
+  "canvasCount": 1,
+  "status": "ready",
+  "elapsedSec": 1.6,
+  "history": [
+    [
+      "loading",
+      0
+    ],
+    [
+      "ready",
+      1.6
+    ]
+  ],
+  "state": {
+    "modelStatus": "ready",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 55.186666665474526,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -45.21404545799806
+      },
+      {
+        "relX": 3.5,
+        "relZ": 42.815932647558924
+      },
+      {
+        "relX": 17.5,
+        "relZ": 16.563227849112792
+      }
+    ]
+  },
+  "nonNetwork": [],
+  "network": [],
+  "failedRequests": [],
+  "pageErrors": []
+}

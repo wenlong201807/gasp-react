@@ -1,0 +1,29 @@
+{
+  "stamp": "20260907060141",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-04",
+      "name": "轮位/辐条",
+      "pass": true,
+      "note": "轮拱有轮✓ 漂移<5px✓ 轮区差分/车身=6.04x✓ 辐条摆动 0.0443✓ 两个对侧侧视✓",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060141/TC-04-hud360-sideA.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060141/TC-04-hud360-sideB.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060141/TC-04-wheels.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060141/TC-04-wheel-rear.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060141/TC-04-wheel-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060141/TC-04-evidence.json"
+      ],
+      "durS": 31.9
+    },
+    {
+      "id": "TC-06",
+      "name": "HUD 六块",
+      "pass": false,
+      "note": "用例异常：TypeError: Cannot read properties of undefined (reading 'meanAbs') |     at Module.run (file:///Users/zhuwenlong/Desktop/ai-study/gasp-react/script/three-car-nav/tests/tc06-hud.mjs:98:38)",
+      "evidence": [],
+      "durS": 5.6
+    }
+  ]
+}

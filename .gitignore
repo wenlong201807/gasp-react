@@ -33,3 +33,6 @@ dist-ssr
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+artifacts/

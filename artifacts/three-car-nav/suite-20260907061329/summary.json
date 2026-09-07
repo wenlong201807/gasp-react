@@ -1,0 +1,29 @@
+{
+  "stamp": "20260907061329",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-07",
+      "name": "变道/POI(慢)",
+      "pass": true,
+      "note": "POI 凯恒中心 剩余 766→703m；hint 3.66s；lane 1→2",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061329/TC-07-nav-line-t0.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061329/TC-07-nav-line-t1.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061329/TC-07-lane-hint.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061329/TC-07-lane-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061329/TC-07-lane-poi-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061329/TC-07-evidence.json"
+      ],
+      "durS": 55.3
+    },
+    {
+      "id": "TC-09",
+      "name": "静态检查",
+      "pass": false,
+      "note": "用例异常：SyntaxError: Identifier 'run' has already been declared |     at compileSourceTextModule (node:internal/modules/esm/utils:318:16)",
+      "evidence": [],
+      "durS": 0
+    }
+  ]
+}

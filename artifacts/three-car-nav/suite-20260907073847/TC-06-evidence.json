@@ -1,0 +1,181 @@
+{
+  "bandRatiosByFrame": [
+    {
+      "speedDigits": 0.1821,
+      "navRoadName": 0.1561,
+      "navLine": 0.1022,
+      "footerLeft": 0.0881,
+      "footerRight": 0.1488,
+      "midRightRegress": 0
+    },
+    {
+      "speedDigits": 0.1713,
+      "navRoadName": 0.1183,
+      "navLine": 0.1058,
+      "footerLeft": 0.0678,
+      "footerRight": 0.1238,
+      "midRightRegress": 0.0117
+    }
+  ],
+  "bandRatios": {
+    "speedDigits": 0.1713,
+    "navRoadName": 0.1183,
+    "navLine": 0.1058,
+    "footerLeft": 0.0678,
+    "footerRight": 0.1238,
+    "midRightRegress": 0.0117
+  },
+  "navLineDiff": {
+    "meanAbs": 0.1377,
+    "changedRatio": 0.5905,
+    "pixels": 9632
+  },
+  "laneAccent": {
+    "n": 329,
+    "cx": 1456.6,
+    "cy": 529,
+    "bbox": {
+      "x0": 1403,
+      "y0": 486,
+      "x1": 1485,
+      "y1": 572,
+      "w": 83,
+      "h": 87
+    }
+  },
+  "laneExpectedCx": 1458.5,
+  "ringFit": {
+    "n": 1104,
+    "cx": 1188.1,
+    "cy": 434.4
+  },
+  "radarPeaks": [
+    {
+      "id": "t0",
+      "dx": 0,
+      "dy": -88,
+      "px": 1200,
+      "py": 380,
+      "best": 0.664,
+      "ctrls": [
+        0.486,
+        0.657,
+        0.481
+      ]
+    },
+    {
+      "id": "t1",
+      "dx": 16,
+      "dy": 84,
+      "px": 1216,
+      "py": 552,
+      "best": 0.657,
+      "ctrls": [
+        0.472,
+        0.664,
+        0.416
+      ]
+    }
+  ],
+  "radarLive": {
+    "meanAbs": 0.0974,
+    "changedRatio": 0.5261,
+    "pixels": 56169
+  },
+  "speedKmh": 60,
+  "sideViews": {
+    "widths": [
+      158,
+      189,
+      189,
+      161,
+      161,
+      134,
+      106,
+      115,
+      121,
+      157,
+      178,
+      158,
+      189,
+      189,
+      160,
+      189,
+      130,
+      101,
+      160,
+      124,
+      146,
+      158,
+      189,
+      118,
+      166,
+      181,
+      160,
+      126,
+      147,
+      103
+    ],
+    "sideA": {
+      "i": 2,
+      "ratio": 189,
+      "smoothed": 179.6667,
+      "t": 8751
+    },
+    "sideB": {
+      "i": 13,
+      "ratio": 189,
+      "smoothed": 179.3333,
+      "t": 17852
+    }
+  },
+  "state": {
+    "state1": {
+      "modelStatus": "ready",
+      "fps": 60,
+      "speedKmh": 60,
+      "gear": "D",
+      "cameraMode": "chase",
+      "timeOfDay": "dusk",
+      "distanceM": 94.6899999996027,
+      "laneIndex": 1,
+      "laneChangeHint": null,
+      "trafficTargets": [
+        {
+          "relX": 0,
+          "relZ": -45.71723652433821
+        },
+        {
+          "relX": 3.5,
+          "relZ": 43.82813279177632
+        }
+      ]
+    },
+    "state2": {
+      "modelStatus": "ready",
+      "fps": 60,
+      "speedKmh": 60,
+      "gear": "D",
+      "cameraMode": "chase",
+      "timeOfDay": "dusk",
+      "distanceM": 503.8616666654716,
+      "laneIndex": 1,
+      "laneChangeHint": null,
+      "trafficTargets": [
+        {
+          "relX": 0,
+          "relZ": -50.92924042092915
+        },
+        {
+          "relX": 3.5,
+          "relZ": 54.31240297995964
+        },
+        {
+          "relX": 10.5,
+          "relZ": -32.6065244185462
+        }
+      ]
+    },
+    "distanceDelta": 409.17
+  }
+}

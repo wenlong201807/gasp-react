@@ -1,0 +1,537 @@
+{
+  "samples": [
+    {
+      "wall": 0,
+      "distanceM": 54.5,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 1,
+      "distanceM": 70.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 1.9,
+      "distanceM": 85.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 2.8,
+      "distanceM": 100.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 3.7,
+      "distanceM": 115.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 4.6,
+      "distanceM": 130.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 5.5,
+      "distanceM": 145.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 6.4,
+      "distanceM": 160.6,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 7.3,
+      "distanceM": 175.9,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 4
+    },
+    {
+      "wall": 8.2,
+      "distanceM": 190.9,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 9.1,
+      "distanceM": 205.9,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 10,
+      "distanceM": 221.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 10.9,
+      "distanceM": 236.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 11.8,
+      "distanceM": 251.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 12.7,
+      "distanceM": 266.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 13.6,
+      "distanceM": 281.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 14.5,
+      "distanceM": 296.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 15.4,
+      "distanceM": 311.2,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 16.3,
+      "distanceM": 326.5,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 17.2,
+      "distanceM": 341.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 18.1,
+      "distanceM": 356.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 19,
+      "distanceM": 371.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 19.9,
+      "distanceM": 386.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 20.8,
+      "distanceM": 401.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 21.7,
+      "distanceM": 416.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 22.6,
+      "distanceM": 431.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 23.5,
+      "distanceM": 446.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 24.4,
+      "distanceM": 461.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 25.3,
+      "distanceM": 476.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 26.2,
+      "distanceM": 491.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 27.1,
+      "distanceM": 506.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 28,
+      "distanceM": 521.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 28.9,
+      "distanceM": 536.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 29.8,
+      "distanceM": 551.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 4
+    },
+    {
+      "wall": 30.7,
+      "distanceM": 566.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 31.6,
+      "distanceM": 581.7,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 32.5,
+      "distanceM": 597,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 33.4,
+      "distanceM": 612,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 34.3,
+      "distanceM": 627,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 35.2,
+      "distanceM": 642,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 36.1,
+      "distanceM": 657,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 37,
+      "distanceM": 672,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 37.9,
+      "distanceM": 687,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 38.8,
+      "distanceM": 702,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 4
+    },
+    {
+      "wall": 39.7,
+      "distanceM": 717,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 3
+    },
+    {
+      "wall": 40.6,
+      "distanceM": 732.3,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 41.5,
+      "distanceM": 747.3,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "凯恒中心",
+      "targets": 2
+    },
+    {
+      "wall": 42.4,
+      "distanceM": 762.3,
+      "laneIndex": 1,
+      "hint": "right",
+      "poi": "朝阳公园",
+      "targets": 1
+    },
+    {
+      "wall": 43.4,
+      "distanceM": 778.4,
+      "laneIndex": 1,
+      "hint": "right",
+      "poi": "朝阳公园",
+      "targets": 1
+    },
+    {
+      "wall": 44.3,
+      "distanceM": 793.4,
+      "laneIndex": 1,
+      "hint": "right",
+      "poi": "朝阳公园",
+      "targets": 1
+    },
+    {
+      "wall": 45.2,
+      "distanceM": 808.4,
+      "laneIndex": 1,
+      "hint": "right",
+      "poi": "朝阳公园",
+      "targets": 2
+    },
+    {
+      "wall": 46.1,
+      "distanceM": 823.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "朝阳公园",
+      "targets": 2
+    },
+    {
+      "wall": 47,
+      "distanceM": 838.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "朝阳公园",
+      "targets": 3
+    },
+    {
+      "wall": 47.9,
+      "distanceM": 853.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "朝阳公园",
+      "targets": 3
+    },
+    {
+      "wall": 48.8,
+      "distanceM": 868.4,
+      "laneIndex": 1,
+      "hint": null,
+      "poi": "朝阳公园",
+      "targets": 3
+    },
+    {
+      "wall": 49.7,
+      "distanceM": 883.4,
+      "laneIndex": 2,
+      "hint": null,
+      "poi": "朝阳公园",
+      "targets": 2
+    }
+  ],
+  "hintWindows": [],
+  "hintStartState": {
+    "modelStatus": "ready",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 762.2533333341253,
+    "laneIndex": 1,
+    "laneChangeHint": "right",
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -54.22061781393766
+      }
+    ]
+  },
+  "hintEndState": {
+    "modelStatus": "ready",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 823.3716666658675,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -54.999139440505495
+      },
+      {
+        "relX": 17.5,
+        "relZ": -31.0582063166516
+      }
+    ]
+  },
+  "navA": {
+    "wall": 0,
+    "distanceM": 54.51333333253856,
+    "index": 0,
+    "offset": 0,
+    "name": "凯恒中心",
+    "arrival": 800,
+    "remainPredicted": 745,
+    "crop": {
+      "file": "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907074810/TC-07-nav-line-t0.png",
+      "w": 193,
+      "h": 77
+    }
+  },
+  "navB": {
+    "wall": 3.7,
+    "distanceM": 115.61666666666694,
+    "index": 0,
+    "offset": 0,
+    "name": "凯恒中心",
+    "arrival": 800,
+    "remainPredicted": 684,
+    "crop": {
+      "file": "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907074810/TC-07-nav-line-t1.png",
+      "w": 193,
+      "h": 77
+    }
+  },
+  "hintStart": {
+    "wall": 42.4,
+    "hint": "right",
+    "lane": 1,
+    "t": 1788767443165
+  },
+  "hintEnd": {
+    "wall": 46.1,
+    "heldSec": 3.67,
+    "lane": 1
+  },
+  "laneAfterHint": {
+    "wall": 49.7,
+    "lane": 2,
+    "from": 1,
+    "settleSec": 3.61
+  },
+  "laneBeforeHint": 1
+}

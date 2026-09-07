@@ -1,0 +1,27 @@
+{
+  "stamp": "20260907055251",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-04",
+      "name": "轮位/辐条",
+      "pass": false,
+      "note": "360° 视口未在扫描窗口内捕捉到两个对侧侧视",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907055251/TC-04-wheels.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907055251/TC-04-wheel-rear.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907055251/TC-04-wheel-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907055251/TC-04-evidence.json"
+      ],
+      "durS": 31.5
+    },
+    {
+      "id": "TC-06",
+      "name": "HUD 六块",
+      "pass": false,
+      "note": "用例异常：TypeError: Cannot read properties of undefined (reading 'meanAbs') |     at Module.run (file:///Users/zhuwenlong/Desktop/ai-study/gasp-react/script/three-car-nav/tests/tc06-hud.mjs:98:38)",
+      "evidence": [],
+      "durS": 5.9
+    }
+  ]
+}

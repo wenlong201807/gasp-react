@@ -1,0 +1,128 @@
+[
+  {
+    "status": 200,
+    "ms": null,
+    "url": "files/hdr/1k.hdr",
+    "type": "application/octet-stream"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car.gltf",
+    "type": "model/gltf+json"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_data.bin",
+    "type": "application/octet-stream"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img5.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img5.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img0.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img0.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img4.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img3.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img6.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img4.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img3.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img6.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img8.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img8.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img2.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img7.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img2.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img7.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img1.webp",
+    "type": "image/webp"
+  },
+  {
+    "status": 200,
+    "ms": null,
+    "url": "models/su7/sm_car_img1.webp",
+    "type": "image/webp"
+  }
+]

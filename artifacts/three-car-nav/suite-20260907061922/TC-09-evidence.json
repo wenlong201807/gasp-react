@@ -1,0 +1,20 @@
+{
+  "lint": {
+    "ok": true,
+    "code": 0,
+    "durMs": 263,
+    "errorLines": [],
+    "tail": "\n> gsap-react@1.0.0 lint /Users/zhuwenlong/Desktop/ai-study/gasp-react\n> biome lint .\n\nChecked 104 files in 22ms. No fixes applied.\nFound 1 info.\n\nbiome.json:5:13 deserialize  DEPRECATED  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n  i The use of the recommended field has been deprecated, and will removed in the next major version of Biome. Use preset instead.\n  \n     3 │     \"includes\": [\"src/**\", \"vite.config.ts\"]\n     4 │   },\n   > 5 │   \"linter\": {\n       │             ^\n   > 6 │     \"enabled\": true,\n   > 7 │     \"rules\": {\n   > 8 │       \"recommended\": false\n   > 9 │     }\n  > 10 │   },\n       │   ^\n    11 │   \"formatter\": {\n    12 │     \"enabled\": true\n  \n  i Migrate the configuration with the proper command\n  \n  $ biome migrate\n  \n\n"
+  },
+  "build": {
+    "ok": true,
+    "code": 0,
+    "durMs": 3195,
+    "errorLines": [],
+    "tail": "\n> gsap-react@1.0.0 build /Users/zhuwenlong/Desktop/ai-study/gasp-react\n> tsc -b && vite build\n\nvite v5.4.21 building for production...\ntransforming...\n✓ 129 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                          0.84 kB │ gzip:   0.43 kB\ndist/assets/index-Di0WZjSb.css          30.45 kB │ gzip:   6.76 kB\ndist/assets/gsap-vendor-SFc2wnMY.js     70.44 kB │ gzip:  27.81 kB\ndist/assets/react-vendor-DNDiwApQ.js   285.85 kB │ gzip:  87.50 kB\ndist/assets/lottie-vendor-BG6RqOwW.js  344.57 kB │ gzip:  91.88 kB\ndist/assets/index-gA7AYhUr.js          924.24 kB │ gzip: 252.90 kB\n✓ built in 1.60s\n\nnode_modules/.pnpm/lottie-web@5.13.0/node_modules/lottie-web/build/player/lottie.js (14422:32): Use of eval in \"node_modules/.pnpm/lottie-web@5.13.0/node_modules/lottie-web/build/player/lottie.js\" is strongly discouraged as it poses security risks and may cause issues with minification.\n\n(!) Some chunks are larger than 500 kB after minification. Consider:\n- Using dynamic import() to code-split the application\n- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks\n- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.\n"
+  },
+  "checks": {
+    "lint": true,
+    "build": true
+  }
+}

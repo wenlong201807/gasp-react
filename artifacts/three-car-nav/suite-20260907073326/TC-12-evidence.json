@@ -1,0 +1,86 @@
+{
+  "model": {
+    "status": "ready",
+    "elapsedSec": 3.21,
+    "history": [
+      [
+        "loading",
+        0
+      ],
+      [
+        "ready",
+        3.21
+      ]
+    ]
+  },
+  "calls": {
+    "callSamples": [
+      94,
+      94,
+      94,
+      94,
+      94,
+      94,
+      94,
+      96
+    ],
+    "callsMax": 96
+  },
+  "fps": {
+    "fpsSamples": [
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60,
+      60
+    ],
+    "fpsMean": 60,
+    "fpsMin": 60
+  },
+  "staticRedraws": {
+    "stableWindow": [
+      1,
+      1
+    ],
+    "afterTodSwitch": 2
+  },
+  "pixelRatio": {
+    "got": 1,
+    "expect": 1
+  },
+  "finalRenderInfo": {
+    "calls": 93,
+    "triangles": 177134,
+    "fps": 60,
+    "pixelRatio": 1,
+    "staticRedraws": 3
+  },
+  "nonNetwork": [],
+  "pageErrors": []
+}

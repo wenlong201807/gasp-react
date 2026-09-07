@@ -1,0 +1,24 @@
+{
+  "stamp": "20260907060321",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-06",
+      "name": "HUD 六块",
+      "pass": true,
+      "note": "六块齐备：①时速/②360小车/③路名导航/④车道高亮/⑤footer带/⑥雷达；footerLeft=0.0689 中部回归带=0.0006",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud-speed.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud-nav.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud-lane.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud-footer.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud-radar.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud360-sideA.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud360-sideB.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-hud-full.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060321/TC-06-evidence.json"
+      ],
+      "durS": 30.7
+    }
+  ]
+}

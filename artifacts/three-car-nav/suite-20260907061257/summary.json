@@ -1,0 +1,20 @@
+{
+  "stamp": "20260907061257",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-08",
+      "name": "拖拽",
+      "pass": true,
+      "note": "横拖 260px → yaw ≈ 2.60rad：车身宽度 118→177px（前后裁剪已归档）",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061257/TC-08-drag-before.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061257/TC-08-drag-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061257/TC-08-drag-resume.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061257/TC-08-drag-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061257/TC-08-evidence.json"
+      ],
+      "durS": 9.7
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "abortedRequestCount": 2,
+  "canvasCount": 1,
+  "loadingHintGone": true,
+  "status": "fallback",
+  "elapsedSec": 14.87,
+  "history": [
+    [
+      "loading",
+      0
+    ],
+    [
+      "fallback",
+      14.87
+    ]
+  ],
+  "state": {
+    "modelStatus": "fallback",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 283.2433333337304,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -48.11901745912415
+      },
+      {
+        "relX": 3.5,
+        "relZ": 48.659464608238316
+      },
+      {
+        "relX": 10.5,
+        "relZ": -19.07672439908613
+      }
+    ]
+  },
+  "roadColor": {
+    "r": 33,
+    "g": 20,
+    "b": 11
+  },
+  "roadLum": 0.0867,
+  "renderDiffDash": [
+    {
+      "meanAbs": 0.0082,
+      "changedRatio": 0.0248,
+      "pixels": 70551
+    }
+  ],
+  "renderDiffFlat": [
+    {
+      "meanAbs": 0,
+      "changedRatio": 0,
+      "pixels": 120801
+    }
+  ],
+  "networkErrors": [],
+  "nonNetworkErrors": [],
+  "failedRequests": []
+}

@@ -1,0 +1,78 @@
+{
+  "crops": [
+    {
+      "id": "hood-front",
+      "label": "车头/引擎盖（HDR 反射）",
+      "file": "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907073847/TC-05-paint-hood-front.png",
+      "w": 191,
+      "h": 91,
+      "meanColor": {
+        "r": 75,
+        "g": 169,
+        "b": 178
+      },
+      "sizedOk": true
+    },
+    {
+      "id": "door-side",
+      "label": "车侧门板（漆面主体色）",
+      "file": "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907073847/TC-05-paint-door-side.png",
+      "w": 191,
+      "h": 91,
+      "meanColor": {
+        "r": 49,
+        "g": 160,
+        "b": 178
+      },
+      "sizedOk": true
+    },
+    {
+      "id": "roof-greenhouse",
+      "label": "车顶/玻璃House（黑色高光）",
+      "file": "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907073847/TC-05-paint-roof-greenhouse.png",
+      "w": 221,
+      "h": 81,
+      "meanColor": {
+        "r": 69,
+        "g": 86,
+        "b": 95
+      },
+      "sizedOk": true
+    },
+    {
+      "id": "wheel-arch",
+      "label": "前轮拱/轮毂（程序化轮+辐条）",
+      "file": "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907073847/TC-05-paint-wheel-arch.png",
+      "w": 171,
+      "h": 111,
+      "meanColor": {
+        "r": 66,
+        "g": 90,
+        "b": 97
+      },
+      "sizedOk": true
+    }
+  ],
+  "modelStatus": "ready",
+  "state": {
+    "modelStatus": "ready",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 106.92833333412808,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -45.87312767278238
+      },
+      {
+        "relX": 3.5,
+        "relZ": 44.14171753819279
+      }
+    ]
+  }
+}
