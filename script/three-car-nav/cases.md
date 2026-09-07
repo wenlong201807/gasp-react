@@ -156,6 +156,45 @@
 - **产物**：`TC-12-perf.png`、`TC-12-evidence.json`（calls 序列 / fps 序列与均值 / staticRedraws 采样对与对照 / pixelRatio 比对 / 最终 renderInfo）。
 - **实现锚点**：`ThreeCarNavEngine.ts#getRenderInfo()`（`renderer.info.render.calls`，主场景 render 为每帧最后一次 render，读数即主场景 draw calls；`staticRedraws` 取自 `HudSystem.staticRedrawCount`，仅 `redrawStaticLayer` 自增——构造首绘 1 次，timeOfDay 变化各 +1）；`renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))`。draw calls 达标手段：RoadSystem 段内静态内容按顶点色合并为单 mesh（8 段 ~118 → ~18 calls）、TrafficSystem 车身/灯带合并 + 20 轮共用 1 个 InstancedMesh（55 → 21 calls），视觉逐项等价（颜色/位姿/种子随机同序）。
 
+## TC-13 hash 路由
+
+- **前置**：P0。
+- **步骤**：
+  1. 直链 `goto(APP_URL + '#/three-car-nav')`（不点菜单）→ 等 `<canvas>`；
+  2. 展开菜单 → 点「Scroll Animation」→ 等 600ms 读 `location.hash` 与页面标记；
+  3. `goto(APP_URL + '#/unknown-id')`（同文档 hashchange）→ 等 `<canvas>` → 读 hash；
+  4. `page.goBack()` → 等 600ms 读 hash 与页面标记；
+  5. 读 `navigator.serviceWorker.controller`。
+- **通过标准**：
+  - ① hash === `#/three-car-nav` 且 canvas === 1（直链即智驾页，无需菜单点入）；
+  - ② hash === `#/scroll` 且 scroll 页 h1（GSAP React）可见、canvas === 0（dock 点击 → navigate → hashchange → 页面切换，与直链共用同一条解析路径）；
+  - ③ hash === `#/three-car-nav` 且 canvas === 1（未知 id 落回智驾页，URL 经 replaceState 归一、不追加历史）；
+  - ④ hash === `#/scroll` 且 scroll 页可见（back 触发 hashchange，页面随路由回切）；
+  - ⑤ dev 模式 `controller === null`（SW 仅 PROD 注册）；非网络类 console error = 0；pageerror = 0。
+- **产物**：`TC-13-hash-route-final.png`、`TC-13-evidence.json`（四步 hash 序列 + 各步标记采样）。
+- **实现锚点**：`src/hooks/useHashRoute.ts`（解析/归一/hashchange 汇聚，dock 点击、前进后退、直链三入口同构）；`App.tsx` 以路由替代内部 state，`MenuDock` active 高亮读路由。
+
+## TC-14 SW 冒烟
+
+- **前置**：生产产物 + preview 生产服（`vite preview --port 4173 --strictPort`，用例自管起停）。
+  **注意（存量地雷）**：仓库 `.env` 钉了 `NODE_ENV=development` 且 vite 构建会读取——默认 `pnpm build` 产出 dev 模式 bundle（`import.meta.env.PROD=false`，SW 注册代码被 DCE，React 为 jsxDEV 运行时）。本用例在产物缺失或含 jsxDEV 时自动以 `NODE_ENV=production` 重建（故全量套件中 TC-09 的默认构建产物会被本用例重建一次）。
+- **步骤**：
+  1. 确保生产产物 → 起 preview（4173）→ `goto(PREVIEW_URL/#/three-car-nav)`；
+  2. 等 `getRegistration()` 非空（页面 load 后 register）→ `reload` → 等 `controller !== null`；
+  3. 读 `caches.keys()`、shell 缓存条目、`fetch('/sw-manifest.json')` 的 version；
+  4. 等 `<canvas>` → 读 `[data-update-toast]` 计数；
+  5. 停 preview 并确认 4173 释放。
+- **通过标准**：注册成功且 `controller.scriptURL` 以 `/sw.js` 结尾；`caches` 含 `app-shell-<version>` 且缓存名与 manifest 的 version 一致；缓存条目含 `'/'` 与 ≥1 条 `/assets/*`；toast 初始隐藏（首次安装不提示）；非网络 console error = 0；pageerror = 0；preview 端口释放。`cdn-models-v1`（CDN 模型经 SW 缓存）记录为证据，不作硬断言（依赖外网可达）。
+- **更新流（手工验证项，不自动化）**：
+  1. `NODE_ENV=production pnpm build`（记下 `dist/sw-manifest.json` 的 version）；
+  2. 改动任意源码后再次同命令构建 → version 与 `dist/sw.js` 字节均变化；
+  3. preview 起服务，打开已被旧 SW 控制的页面；
+  4. DevTools → Application → Service Workers → Update（或等 5 分钟轮询 / 切回标签页触发 visibilitychange 检查）；
+  5. 右下角出现「发现新版本」toast → 点「立即更新」→ 新 SW 接管（controllerchange）→ 页面自动刷新一次，刷新后 toast 消失。
+  不做自动化的原因：更新链路依赖真实的新旧 SW 交接与用户点击，在 Playwright 上下文里伪造 waiting/controllerchange 的注入式断言不可信，不造假。
+- **产物**：`TC-14-sw-preview.png`、`TC-14-evidence.json`（注册/缓存原文 + 手工步骤清单）、`TC-14-preview.log`。
+- **实现锚点**：`public/sw.js`（install 按 manifest 预缓存、activate 按缓存名清旧、fetch 三策略、SKIP_WAITING 消息）；`vite.config.ts` swManifest 插件（writeBundle 产出 sw-manifest.json 并把 version 注入 dist/sw.js 占位符——registration.update() 只按 sw.js 字节比对，不注入则更新提示永不触发）；`src/sw.ts`（PROD 注册 + 5 分钟/visibilitychange 轮询 + waiting 通知 + controllerchange 防循环 reload）；`src/components/UpdateToast.tsx`。
+
 ---
 
 ## 附：洞的透明性对自动化判定的影响（取舍记录）

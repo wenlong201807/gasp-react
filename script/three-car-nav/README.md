@@ -1,7 +1,8 @@
 # three-car-nav · Playwright 验收集（仓库常驻）
 
 把 three-car-nav（`src/components/three-car-nav/`）历轮验收逻辑固化成的常驻 Playwright 测试集。
-主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-12 → 汇总判定表 → 全绿 `exit 0`。
+主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-14 → 汇总判定表 → 全绿 `exit 0`。
+TC-13 为 hash 路由用例（dev server）；TC-14 为 Service Worker 冒烟（生产产物 + 自管 `vite preview` 4173 起停）。
 
 ## 运行方式
 
@@ -24,7 +25,7 @@ TCN_KEEP_SERVER=1 node script/three-car-nav/run.mjs
 ```
 
 运行结束打印判定表 + 证据路径，全部通过 `exit 0`，任何 ❌ `exit 1`。
-单次全量耗时约 4.5–5.5 分钟（其中 TC-07 变道/POI ~55s、TC-12 性能采样 ~45s 为慢用例）。
+单次全量耗时约 5–6 分钟（其中 TC-07 变道/POI ~55s、TC-12 性能采样 ~45s 为慢用例；TC-14 含生产构建与 preview 起停 ~20s）。
 
 > 提示：不要把全量输出 pipe 给 `head` 之类的命令——管道提前关闭会 SIGPIPE 掉主进程，
 > 导致 dev server 清理（TEARDOWN）不执行。需要截取输出请先落盘再过滤。
@@ -62,6 +63,8 @@ TCN_KEEP_SERVER=1 node script/three-car-nav/run.mjs
 | TC-10 | `tests/tc10-panel.mjs` | 控制面板 | slider/快捷键 → `speedKmh`（90 锁定值）；暂停 → `gear==='P'` + slider/快捷键 disabled（DOM）+ `distanceM` 冻结；恢复 → `'D'` + 重新推进；视角/日夜三选逐一命中 `cameraMode`/`timeOfDay` |
 | TC-11 | `tests/tc11-robustness.mjs` | 鲁棒性 | 菜单切走→切回 ×2：canvas 恒 1（切走时 0）、console 无新增非网络 error、`modelStatus` 可恢复；合成 `webglcontextlost` → `distanceM`/`fps` 冻结且 canvas 仍在；`webglcontextrestored` → 渲染恢复推进；WebGL 不可用场景为代码走查项（cases.md） |
 | TC-12 | `tests/tc12-performance.mjs` | 性能 | `getRenderInfo()` 8 次采样 `calls < 120`；fps 31×1s 采样均值 ≥ 30；timeOfDay 不变窗口 `staticRedraws` 不增（切白天活性对照 +1）；`pixelRatio === min(dpr,2)` 且 ≤ 2 |
+| TC-13 | `tests/tc13-hash-route.mjs` | hash 路由 | 直链 `#/three-car-nav` 即智驾页；dock 点另一项 → hash 变更 + 页面切换；`#/unknown-id` 落回智驾页（URL 归一）；`history.back()` 回上一页；dev 无 SW |
+| TC-14 | `tests/tc14-sw.mjs` | SW 冒烟 | 生产产物自动保障（`.env` 的 NODE_ENV=development 地雷 → jsxDEV 探测重建）+ preview 4173 自管起停：SW 注册且 controller 为 `/sw.js`、`app-shell-<version>` 缓存与 manifest version 一致且含 `/` 与 `/assets/*`、toast 初始隐藏、端口释放；更新流为手工验证项（cases.md） |
 
 逐条的前置 / 步骤 / 通过标准 / 关联产物见 [`cases.md`](./cases.md)。
 
