@@ -5,6 +5,7 @@ import { CarSystem } from './CarSystem';
 import { CitySystem } from './CitySystem';
 import { DayNightSystem } from './DayNightSystem';
 import { RoadSystem } from './RoadSystem';
+import { TrafficSystem } from './TrafficSystem';
 
 /** onStats 合并快照：引擎统计 + 驾驶状态（节流 5Hz 推送） */
 export type EngineSnapshot = EngineStats & DrivingState;
@@ -17,8 +18,8 @@ const MAX_DT_SEC = 0.1; // 切后台回来防止 dt 跳变
 /**
  * three-car-nav 引擎。
  * 生命周期：new(container) → start() → [RAF render] → dispose()
- * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem。
- * 后续任务将接入 TrafficSystem / HudSystem。
+ * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem / TrafficSystem。
+ * 后续任务将接入 HudSystem。
  */
 export class ThreeCarNavEngine {
 	readonly state: DrivingState = {
@@ -44,6 +45,7 @@ export class ThreeCarNavEngine {
 	private roadSystem: RoadSystem;
 	private citySystem: CitySystem;
 	private carSystem: CarSystem;
+	private trafficSystem: TrafficSystem;
 	private dayNightSystem: DayNightSystem;
 	private cameraRig: CameraRig;
 	private clock = new THREE.Clock();
@@ -68,15 +70,20 @@ export class ThreeCarNavEngine {
 		this.carSystem.onStatus((s) => {
 			this.stats = { ...this.stats, modelStatus: s.modelStatus };
 		});
+		this.trafficSystem = new TrafficSystem(this.scene);
 
 		/* 光照/背景/雾归 DayNightSystem 所有：构造即以 dusk 满值起步并同步路灯/窗灯/车灯联动 */
 		this.dayNightSystem = new DayNightSystem(this.scene, this.renderer, {
 			setLampsOn: (on) => this.roadSystem.setLampsOn(on),
 			setWindowGlow: (k) => this.citySystem.setWindowGlow(k),
-			setCarLights: (on) => this.carSystem.setLights(on),
+			setCarLights: (on) => {
+				this.carSystem.setLights(on);
+				this.trafficSystem.setLights(on);
+			},
 		});
-		// 立即同步当前 dusk 默认 lampsOn 状态到 carSystem
+		// 立即同步当前 dusk 默认 lampsOn 状态到主车与车流（dusk/night 车灯开，对向来车灯可见）
 		this.carSystem.setLights(this.dayNightSystem.lampsOn);
+		this.trafficSystem.setLights(this.dayNightSystem.lampsOn);
 
 		this.cameraRig = new CameraRig(this.camera, this.state.cameraMode);
 
@@ -112,6 +119,7 @@ export class ThreeCarNavEngine {
 		this.roadSystem.dispose();
 		this.citySystem.dispose();
 		this.carSystem.dispose();
+		this.trafficSystem.dispose();
 		this.dayNightSystem.dispose();
 		this.cameraRig.dispose();
 
@@ -159,6 +167,7 @@ export class ThreeCarNavEngine {
 		this.roadSystem.update(dt, this.state);
 		this.citySystem.update(dt, this.state);
 		this.carSystem.update(dt, this.state);
+		this.trafficSystem.update(dt, this.state); // 车流滚动并写入 state.trafficTargets
 		this.dayNightSystem.update(dt, this.state);
 		this.cameraRig.update(dt, this.state); // 相机最后更新，反映当帧最新状态
 		this.emitStats();
