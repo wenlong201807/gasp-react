@@ -1,7 +1,8 @@
+import { HudControlPanel } from './HudControlPanel';
 import { useThreeCarNav } from './useThreeCarNav';
 
 export function ThreeCarNavPage() {
-	const { containerRef, stats } = useThreeCarNav();
+	const { containerRef, controls, stats } = useThreeCarNav();
 
 	return (
 		<div
@@ -33,6 +34,7 @@ export function ThreeCarNavPage() {
 					模型加载中…
 				</div>
 			)}
+			<HudControlPanel stats={stats} controls={controls} />
 		</div>
 	);
 }
