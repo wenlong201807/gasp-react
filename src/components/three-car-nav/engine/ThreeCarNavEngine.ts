@@ -19,7 +19,7 @@ const MAX_DT_SEC = 0.1; // 切后台回来防止 dt 跳变
 /**
  * three-car-nav 引擎。
  * 生命周期：new(container) → start() → [RAF render] → dispose()
- * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem / TrafficSystem / HudSystem(7a)。
+ * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem / TrafficSystem / HudSystem(7a–7c)。
  */
 export class ThreeCarNavEngine {
 	readonly state: DrivingState = {
@@ -85,9 +85,10 @@ export class ThreeCarNavEngine {
 
 		this.cameraRig = new CameraRig(this.camera, this.state.cameraMode);
 
-		/* 全息 HUD：底图/时速/位姿（7a）+ 中央 360° RTT 小车视口与拖拽（7b）。
-		   getCarClone 传 getter 而非一次性值：构造时 SU7 多半未加载完，先取 fallback 克隆，
-		   modelStatus 变 ready/fallback 时由下方订阅回调调 refreshCar() 换正式克隆 */
+		/* 全息 HUD：底图/时速/位姿（7a）+ 中央 360° RTT 小车视口与拖拽（7b）
+		   + POI/变道数据脚本与雷达（7c）。getCarClone 传 getter 而非一次性值：构造时 SU7
+		   多半未加载完，先取 fallback 克隆，modelStatus 变 ready/fallback 时由下方订阅
+		   回调调 refreshCar() 换正式克隆 */
 		this.hudSystem = new HudSystem(
 			this.scene,
 			{
@@ -197,10 +198,13 @@ export class ThreeCarNavEngine {
 		const dt = Math.min(this.clock.getDelta(), MAX_DT_SEC);
 		this.roadSystem.update(dt, this.state);
 		this.citySystem.update(dt, this.state);
-		this.carSystem.update(dt, this.state);
+		this.carSystem.update(dt, this.state); // 主车微动 + 7c：侦测 hint 沿执行变道，到位写 laneIndex
 		this.trafficSystem.update(dt, this.state); // 车流滚动并写入 state.trafficTargets
 		this.dayNightSystem.update(dt, this.state);
-		this.hudSystem.update(dt, this.state); // HUD 位姿随 cameraMode、静态层随 timeOfDay
+		// HUD 位姿/绘制 + 7c 数据脚本：直写 distanceM（唯一推进点）与 laneChangeHint（45s/4s）。
+		// 顺序注意：car 在 hud 之前 → CarSystem 侦测上一帧 hint 沿（1 帧延迟，无感）；
+		// traffic 在 hud 之前 → 雷达当帧即读到最新 trafficTargets
+		this.hudSystem.update(dt, this.state);
 		this.cameraRig.update(dt, this.state); // 相机最后更新，反映当帧最新状态
 		this.emitStats();
 		this.renderer.render(this.scene, this.camera);

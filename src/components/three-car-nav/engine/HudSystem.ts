@@ -60,6 +60,33 @@ const CAR_PLANE_Z = -0.01;
 const CAR_INITIAL_YAW = 0.6;
 const CAR_BASE_PITCH = 0.25;
 
+/* ------------------------------------------------------------------ */
+/* 7c 锁定常量：数据脚本 + 雷达（计划 Task 7 Step 4）                   */
+/* ------------------------------------------------------------------ */
+/** POI 序列（锁定）：到达里程按累计里程制，循环时累加一轮总里程偏移 */
+const POI_LIST = [
+	{ name: '凯恒中心', arriveM: 800 },
+	{ name: '朝阳公园', arriveM: 1600 },
+	{ name: '蓝色港湾', arriveM: 2400 },
+];
+/** 一轮 POI 总里程 = 最远 POI 到达里程（第二轮凯恒中心 = 800 + 2400×N） */
+const POI_LOOP_M = 2400;
+/** 剩余距离低于该值切换下一 POI */
+const POI_SWITCH_REMAIN_M = 50;
+/** 变道提示间隔 / 提示时长 / 车道图箭头闪烁周期 */
+const LANE_HINT_INTERVAL_SEC = 45;
+const LANE_HINT_DURATION_SEC = 4;
+const LANE_HINT_BLINK_SEC = 1.2;
+/** 雷达（锁定）：同心环由内向外透明度衰减；量程 x±25m z±60m 映射到 r_max */
+const RADAR_RINGS = [90, 180, 270, 320];
+const RADAR_RING_ALPHA = [0.4, 0.3, 0.2, 0.12];
+const RADAR_RANGE_X_M = 25;
+const RADAR_RANGE_Z_M = 60;
+const RADAR_R_MAX = 320;
+/** 扫描扇形角速度（锁定 1.2 rad/s）与拖尾弧长 */
+const RADAR_SWEEP_SPEED = 1.2;
+const RADAR_SWEEP_TRAIL = 1.1;
+
 /** 三档 HUD 配色（计划允许自定，要求协调：dusk 暖紫 / day 亮调 / night 深蓝调） */
 interface HudPalette {
 	/** 面板底渐变顶/底（带透明度，保留全息通透感） */
@@ -182,18 +209,23 @@ export interface HudViewportDeps {
 }
 
 /**
- * 全息 HUD 系统（Task 7a：面板底图 + 时速 + 位姿；7b：中央 360° RTT 小车视口 + 拖拽）。
+ * 全息 HUD 系统（Task 7a：面板底图 + 时速 + 位姿；7b：中央 360° RTT 小车视口 + 拖拽；
+ * 7c：POI 导航脚本 + 变道 hint 脚本 + 中央洞雷达）。
  *
  * 双层 canvas 缓存（Task 9 性能检查项）：
  * - 静态层（底渐变/分区框/标签/装饰环/静态文案）仅在 timeOfDay 变化时重绘；
- * - 动态层每帧先整幅拷贝静态层，再叠加车速数字/档位/时钟/车道图后上传纹理。
+ * - 动态层每帧先整幅拷贝静态层，再叠加车速/档位/时钟/导航行/车道图/雷达后上传纹理。
  *
  * 7b 360° 视口：mini Scene（hemi+dir 简灯 + 同步主场景 environment 引用）经
  * WebGLRenderTarget(512²) 渲染，子平面嵌在面板中央洞（renderOrder 先于面板绘制，
  * alpha 0 清屏使车体外透明、洞内装饰环可透出）；pointerdown raycast 命中子平面
  * 进入拖拽（yaw/pitch 环绕），释放后自动旋转暂停 3s 再恢复。
  *
- * 后续子块（勿在 7b 实现）：7c 雷达目标点/POI 递减/变道 hint。
+ * 7c 数据脚本（updateScripts）：唯一直写 state.distanceM（累计里程）与
+ * state.laneChangeHint（45s 周期 / 4s 提示）——与 TrafficSystem 直写 trafficTargets
+ * 同一先例；变道「执行」不在 HUD：CarSystem 帧间侦测 hint 沿（出现→记目标道，
+ * 消失→x 缓缓 lerp→到位写 laneIndex）。P 档冻结脚本计时（里程/hint 不推进），
+ * 视觉时钟 vizT（扫描/闪烁/脉冲）不受档位影响。
  */
 export class HudSystem {
 	private scene: THREE.Scene;
@@ -239,6 +271,18 @@ export class HudSystem {
 	private lastPointerY = 0;
 	private raycaster = new THREE.Raycaster();
 	private pointerNdc = new THREE.Vector2();
+
+	/* 7c：数据脚本状态（纯计时字段，无 GPU 资源；dispose 复位防复用残留） */
+	/** 视觉时钟：雷达扫描角 / hint 箭头闪烁 / 目标脉冲相位（P 档也推进） */
+	private vizT = 0;
+	/** 当前 POI 下标与循环累计偏移（第二轮凯恒中心 = 800 + 2400×N） */
+	private poiIndex = 0;
+	private poiOffsetM = 0;
+	/** 距下次 hint 触发的倒计时 / hint 展示剩余秒（>0 即展示中） */
+	private hintCountdownSec = LANE_HINT_INTERVAL_SEC;
+	private hintTimerSec = 0;
+	/** lane 1 出发的 hint 方向交替开关（边界道 0/2 只能往内，不消耗开关） */
+	private hintFlip = false;
 
 	constructor(
 		scene: THREE.Scene,
@@ -311,6 +355,9 @@ export class HudSystem {
 			this.redrawStaticLayer(state.timeOfDay);
 		}
 
+		/* 7c：数据脚本先于绘制——本帧导航行/雷达/hint 箭头即读到最新 state */
+		this.updateScripts(dt, state);
+
 		this.drawDynamicLayer(state);
 
 		/* 位姿随 cameraMode 平滑过渡（k = 1 - exp(-4dt)，与 CameraRig 同模式） */
@@ -336,6 +383,14 @@ export class HudSystem {
 		container.removeEventListener('pointermove', this.onPointerMove);
 		container.removeEventListener('pointerup', this.onPointerUp);
 		container.removeEventListener('pointercancel', this.onPointerUp);
+		/* 7c：脚本计时全为帧驱动字段（无 setTimeout/setInterval，停帧即停），
+		   此处复位防止引擎实例被复用时的脚本状态残留 */
+		this.vizT = 0;
+		this.poiIndex = 0;
+		this.poiOffsetM = 0;
+		this.hintCountdownSec = LANE_HINT_INTERVAL_SEC;
+		this.hintTimerSec = 0;
+		this.hintFlip = false;
 		/* RT 与子平面几何/材质释放（材质 map 即 rt.texture，随 RT 一并回收） */
 		this.carRT.dispose();
 		this.carPlaneGeometry.dispose();
@@ -397,14 +452,11 @@ export class HudSystem {
 		/* 4. 中央 360° 洞：雷达装饰环占位（RTT 小车子平面是 7b；扫描/目标点是 7c） */
 		this.drawHoleRings(ctx, p);
 
-		/* 5. 右列静态占位文案（POI 数据脚本是 7c） */
+		/* 5. 右列静态：路名固定；导航行随 distanceM 递减，由 7c 移至动态层绘制 */
 		ctx.textAlign = 'left';
 		ctx.fillStyle = p.text;
 		ctx.font = "bold 64px 'PingFang SC', 'Microsoft YaHei', sans-serif";
 		ctx.fillText('朝阳北路', NAV_BOX.x + 28, NAV_BOX.y + 136);
-		ctx.fillStyle = p.subtle;
-		ctx.font = "500 52px 'PingFang SC', 'Microsoft YaHei', sans-serif";
-		ctx.fillText('前方 320 m · 凯恒中心', NAV_BOX.x + 28, NAV_BOX.y + 224);
 
 		/* 6. 底部条静态：续航 / 信号点 / 智驾状态（时间在动态层） */
 		this.drawSection(ctx, p, FOOT_BOX, '');
@@ -504,7 +556,7 @@ export class HudSystem {
 	}
 
 	/* ---------------------------------------------------------------- */
-	/* 动态层：每帧拷贝静态层后叠加车速 / 档位 / 时钟 / 车道图             */
+	/* 动态层：每帧拷贝静态层后叠加车速/档位/时钟/导航行/车道图/雷达        */
 	/* ---------------------------------------------------------------- */
 
 	private drawDynamicLayer(state: DrivingState): void {
@@ -517,7 +569,9 @@ export class HudSystem {
 		this.drawSpeedNumber(ctx, state, p);
 		this.drawGearPill(ctx, state, p);
 		this.drawClock(ctx, p);
+		this.drawNavLine(ctx, state, p);
 		this.drawLaneMap(ctx, state, p);
+		this.drawRadar(ctx, state, p);
 
 		this.dynamicTexture.needsUpdate = true;
 	}
@@ -574,7 +628,68 @@ export class HudSystem {
 		}
 	}
 
-	/** 车道图：460×260 透视梯形三车道，当前道青色 35% 高亮（hint 箭头闪烁是 7c） */
+	/* ---------------------------------------------------------------- */
+	/* 7c：数据脚本——里程累计 / POI 循环 / 变道 hint 触发（直写 state）   */
+	/* ---------------------------------------------------------------- */
+
+	/**
+	 * 每帧推进数据脚本（P 档冻结计时）：
+	 * 1) 唯一推进 state.distanceM（引擎与各系统均不写它，里程按 kmh/3.6 m/s 累计）；
+	 * 2) 当前 POI 剩余 <50m 切换下一个，绕回队首时偏移累加一轮总里程
+	 *    （累计里程制：第二轮凯恒中心到达里程 = 800 + 2400×N，剩余距离显示不跳变）；
+	 * 3) 每 ~45s 触发一次 laneChangeHint（持续 4s）——HUD 只发「意图」，
+	 *    CarSystem 帧间侦测 hint 消失沿后执行 x 缓变与 laneIndex 落位（驾驶逻辑不进 HUD）。
+	 */
+	private updateScripts(dt: number, state: DrivingState): void {
+		this.vizT += dt;
+		if (state.gear === 'P') return; // 停车冻结：里程不累计、hint 计时不推进
+
+		state.distanceM += (state.speedKmh / 3.6) * dt;
+
+		const arrival = POI_LIST[this.poiIndex].arriveM + this.poiOffsetM;
+		if (arrival - state.distanceM < POI_SWITCH_REMAIN_M) {
+			this.poiIndex = (this.poiIndex + 1) % POI_LIST.length;
+			if (this.poiIndex === 0) {
+				this.poiOffsetM += POI_LOOP_M;
+			}
+		}
+
+		if (this.hintTimerSec > 0) {
+			this.hintTimerSec -= dt;
+			if (this.hintTimerSec <= 0) {
+				this.hintTimerSec = 0;
+				state.laneChangeHint = null; // 提示结束沿：CarSystem 下一帧侦测到并开始缓变
+			}
+		} else {
+			this.hintCountdownSec -= dt;
+			if (this.hintCountdownSec <= 0) {
+				this.hintCountdownSec = LANE_HINT_INTERVAL_SEC;
+				state.laneChangeHint = this.pickHintDirection(state.laneIndex);
+				this.hintTimerSec = LANE_HINT_DURATION_SEC;
+			}
+		}
+	}
+
+	/** 目标道在 0/1/2 内合法选择（边界道只往内；lane 1 左右交替，确定性便于 e2e 断言） */
+	private pickHintDirection(lane: 0 | 1 | 2): 'left' | 'right' {
+		if (lane === 0) return 'right';
+		if (lane === 2) return 'left';
+		this.hintFlip = !this.hintFlip;
+		return this.hintFlip ? 'right' : 'left';
+	}
+
+	/** 7c 导航行：「前方 {剩余距离} m · {名称}」，随 state.distanceM 递减（样式沿用 7a 占位） */
+	private drawNavLine(ctx: CanvasRenderingContext2D, state: DrivingState, p: HudPalette): void {
+		const poi = POI_LIST[this.poiIndex];
+		const remainM = Math.max(0, Math.round(poi.arriveM + this.poiOffsetM - state.distanceM));
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'alphabetic';
+		ctx.fillStyle = p.subtle;
+		ctx.font = "500 52px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+		ctx.fillText(`前方 ${remainM} m · ${poi.name}`, NAV_BOX.x + 28, NAV_BOX.y + 224);
+	}
+
+	/** 车道图：460×260 透视梯形三车道，当前道青色 35% 高亮 + 7c hint 箭头 1.2s 闪烁 */
 	private drawLaneMap(ctx: CanvasRenderingContext2D, state: DrivingState, p: HudPalette): void {
 		const { x, yTop, yBottom, wBottom, wTop } = LANE_TRAP;
 		/** 纵向 t∈[0,1]（0=远端）处车道图半宽与中心 x（透视：宽度按 t^1.5 收敛） */
@@ -643,6 +758,86 @@ export class HudSystem {
 		ctx.beginPath();
 		ctx.arc(cx + halfWidthAt(t0) * laneCenterFrac, yAt(t0), 12, 0, Math.PI * 2);
 		ctx.fill();
+
+		/* 7c 变道 hint 箭头：目标道方向双 chevron，1.2s 周期闪烁（前半周期可见） */
+		if (state.laneChangeHint && this.vizT % LANE_HINT_BLINK_SEC < LANE_HINT_BLINK_SEC / 2) {
+			const dir = state.laneChangeHint === 'left' ? -1 : 1;
+			const targetFrac = laneCenterFrac + (dir * 2) / 3;
+			const ax = cx + halfWidthAt(0.55) * targetFrac;
+			const ay = yAt(0.55);
+			ctx.strokeStyle = p.speedNormal;
+			ctx.lineWidth = 10;
+			ctx.lineCap = 'round';
+			ctx.lineJoin = 'round';
+			ctx.globalAlpha = 0.95;
+			for (let c = 0; c < 2; c++) {
+				const ox = ax - dir * c * 34; // 第二道 chevron 拖在指向后方
+				ctx.beginPath();
+				ctx.moveTo(ox - dir * 16, ay - 22);
+				ctx.lineTo(ox + dir * 16, ay);
+				ctx.lineTo(ox - dir * 16, ay + 22);
+				ctx.stroke();
+			}
+			ctx.globalAlpha = 1;
+			ctx.lineCap = 'butt';
+		}
+	}
+
+	/**
+	 * 7c 雷达（中央洞内，动态层每帧）：
+	 * 同心环 r90/180/270/320 透明度由内向外衰减 + 1.2rad/s 旋转扫描扇形（细楔形
+	 * 序列渐隐近似锥形渐变，免 createConicGradient 的兼容性分支）+
+	 * state.trafficTargets 映射目标点 (relX/25·r_max, relZ/60·r_max)。
+	 * 方向：relX 右正 → 屏幕右；relZ 前负后正（车头朝 -Z）→ 前方目标映到洞上方。
+	 */
+	private drawRadar(ctx: CanvasRenderingContext2D, state: DrivingState, p: HudPalette): void {
+		const { x: cx, y: cy } = HOLE_CENTER;
+
+		/* 同心环：透明度由内向外衰减 */
+		ctx.strokeStyle = p.accent;
+		ctx.lineWidth = 2.5;
+		for (let i = 0; i < RADAR_RINGS.length; i++) {
+			ctx.globalAlpha = RADAR_RING_ALPHA[i];
+			ctx.beginPath();
+			ctx.arc(cx, cy, RADAR_RINGS[i], 0, Math.PI * 2);
+			ctx.stroke();
+		}
+
+		/* 扫描扇形：前沿最亮、向后 RADAR_SWEEP_TRAIL 弧长渐隐；角度由 vizT 推导无累计漂移 */
+		const sweep = (this.vizT * RADAR_SWEEP_SPEED) % (Math.PI * 2);
+		const steps = 12;
+		ctx.fillStyle = p.accent;
+		for (let i = 0; i < steps; i++) {
+			const a1 = sweep - (RADAR_SWEEP_TRAIL * i) / steps;
+			const a2 = a1 - RADAR_SWEEP_TRAIL / steps - 0.01;
+			ctx.globalAlpha = 0.1 * (1 - i / steps);
+			ctx.beginPath();
+			ctx.moveTo(cx, cy);
+			ctx.arc(cx, cy, RADAR_RINGS[RADAR_RINGS.length - 1], a2, a1);
+			ctx.closePath();
+			ctx.fill();
+		}
+
+		/* 目标点：接近（|relZ| 变小）→ 基点更大 + 呼吸光环脉冲放大 */
+		for (let i = 0; i < state.trafficTargets.length; i++) {
+			const t = state.trafficTargets[i];
+			const px = cx + (t.relX / RADAR_RANGE_X_M) * RADAR_R_MAX;
+			const py = cy + (t.relZ / RADAR_RANGE_Z_M) * RADAR_R_MAX;
+			const closeness = 1 - Math.min(Math.abs(t.relZ) / RADAR_RANGE_Z_M, 1);
+			const base = 6 + closeness * 8;
+			ctx.strokeStyle = p.accent;
+			ctx.lineWidth = 2.5;
+			ctx.globalAlpha = 0.35;
+			ctx.beginPath();
+			ctx.arc(px, py, base + 5 + Math.sin(this.vizT * 5 + i * 1.7) * 3, 0, Math.PI * 2);
+			ctx.stroke();
+			ctx.globalAlpha = 0.95;
+			ctx.fillStyle = p.accent;
+			ctx.beginPath();
+			ctx.arc(px, py, base, 0, Math.PI * 2);
+			ctx.fill();
+		}
+		ctx.globalAlpha = 1;
 	}
 
 	/* ---------------------------------------------------------------- */

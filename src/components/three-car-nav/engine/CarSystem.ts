@@ -10,6 +10,12 @@ const HDR_URL = `${CDN_BASE}files/hdr/1k.hdr`;
 const MODEL_URL = `${CDN_BASE}models/su7/sm_car.gltf`;
 const LOAD_TIMEOUT_MS = 15000;
 const HUD_CLONE_SCALE = 0.9; // 360° 视口用的小车缩放
+/* 7c 变道执行（计划 Task 7 Step 4）：意图由 HudSystem 写入 state.laneChangeHint */
+const LANE_CENTER_X = [-3.5, 0, 3.5]; // 本向三车道中心（与 RoadSystem/TrafficSystem 一致）
+/** 变道缓变系数：x += Δ·(1-exp(-1.25·dt))，约 2.8s 收敛 97%（计划建议 2.5–3s） */
+const LANE_LERP_RATE = 1.25;
+/** 到位阈值：|Δx| 小于该值即落位（3.5m 跨度的约 1.7%） */
+const LANE_ARRIVE_M = 0.06;
 
 export interface CarStats {
 	/** su7: loading → ready | fallback */
@@ -45,6 +51,12 @@ export class CarSystem implements CarLightControllable {
 	private loaded = false;
 	private swayT = 0;
 	private lightsOn = false;
+	/* 7c 变道状态机（意图来自 HudSystem 每帧写入的 state.laneChangeHint） */
+	private prevHint: 'left' | 'right' | null = null;
+	private lanePhase: 'hold' | 'hint' | 'lerp' = 'hold';
+	private laneTarget: 0 | 1 | 2 = 1;
+	/** 主车平滑 x：hold 贴当前道中心，lerp 时缓缓逼向目标道中心 */
+	private carX = 0;
 	private envRT: THREE.WebGLRenderTarget | null = null;
 	private disposed = false;
 
@@ -113,8 +125,10 @@ export class CarSystem implements CarLightControllable {
 		return group;
 	}
 
-	/** 每帧更新：车轮滚动 + 车道微动 */
+	/** 每帧更新：变道状态机 + 车轮滚动 + 车道微动 */
 	update(dt: number, state: DrivingState): void {
+		// 状态机先于 early-return：加载期 hint 沿也能被记录（不丢意图，只暂无车身可视化）
+		this.updateLaneChange(dt, state);
 		if (!this.loaded) return;
 		this.swayT += dt;
 
@@ -125,11 +139,52 @@ export class CarSystem implements CarLightControllable {
 			w.rotation.x -= (speed / 0.34) * dt;
 		}
 
-		// 车道微动：yaw + 横向 sin（叠加在引擎做的车道中心 lerp 上）
+		// 车道微动：yaw + 横向 sin（叠加在车道中心/变道缓变的 carX 上）
 		if (this.carGroup) {
 			this.carGroup.rotation.y = Math.sin(this.swayT * 0.8) * 0.007;
-			const baseX = state.laneIndex === 0 ? -3.5 : state.laneIndex === 1 ? 0 : 3.5;
-			this.carGroup.position.x = baseX + Math.sin(this.swayT * 0.5) * 0.02;
+			this.carGroup.position.x = this.carX + Math.sin(this.swayT * 0.5) * 0.02;
+		}
+	}
+
+	/**
+	 * 7c 变道执行状态机（HudSystem 只发意图，驾驶逻辑在车）：
+	 * - hint 出现沿：按方向记录目标道（须落在 0/1/2 内，边界道只往内，非法方向忽略）；
+	 * - hint 消失沿（4s 提示结束）：进入 lerp，主车 x 向目标道中心缓缓逼近
+	 *   （x += Δ·(1-exp(-1.25·dt))，~2.8s 完成约 97%，真实变道感）；
+	 * - |Δx| < 0.06m 判到位：x 贴齐目标中心 + state.laneIndex 落位（唯一写点），回 hold。
+	 *
+	 * 与 TrafficSystem 的一致性取舍：TrafficSystem 用 state.laneIndex 推 egoX（跟车链
+	 * 与雷达 relX 的基准），变道窗口内（~3s）实际车 x 与 egoX 偏差最大 3.5m（一个道宽）。
+	 * 跟车按「同车道号」判定不受影响；雷达 relX 的该误差只是装饰性显示的短暂失真，
+	 * 落位后即归零——接受此偏差，换取 laneIndex 仅在变道完成时原子更新。
+	 */
+	private updateLaneChange(dt: number, state: DrivingState): void {
+		const hint = state.laneChangeHint;
+		if (hint !== this.prevHint) {
+			if (hint !== null && this.lanePhase === 'hold') {
+				const dir = hint === 'left' ? -1 : 1;
+				const target = state.laneIndex + dir;
+				if (target >= 0 && target <= 2) {
+					this.laneTarget = target as 0 | 1 | 2;
+					this.lanePhase = 'hint';
+				}
+			} else if (hint === null && this.lanePhase === 'hint') {
+				this.lanePhase = 'lerp';
+			}
+			this.prevHint = hint;
+		}
+
+		if (this.lanePhase === 'lerp') {
+			const targetX = LANE_CENTER_X[this.laneTarget];
+			this.carX += (targetX - this.carX) * (1 - Math.exp(-LANE_LERP_RATE * dt));
+			if (Math.abs(targetX - this.carX) < LANE_ARRIVE_M) {
+				this.carX = targetX;
+				state.laneIndex = this.laneTarget; // 到位落位：laneIndex 唯一写点
+				this.lanePhase = 'hold';
+			}
+		} else {
+			// hold / hint（4s 提示期车保持原道）：贴当前道中心
+			this.carX = LANE_CENTER_X[state.laneIndex];
 		}
 	}
 
