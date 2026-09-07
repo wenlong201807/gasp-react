@@ -1,0 +1,6 @@
+# Biome lint gate (110 files, currently 0 errors).
+# NOTE: `biome format` (check mode) still reports ~30 legacy errors under src/
+# (fiber-todo / event-loop / menu). Wiring it in now would block every commit
+# until that debt is cleaned. Append `pnpm run format:check` once src/ is
+# format-clean.
+pnpm run lint
