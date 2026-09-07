@@ -131,11 +131,11 @@ export interface EngineControls {
 - Create: engine/TrafficSystem.ts
 - Modify: ThreeCarNavEngine.ts（接入，把 targets 写入 state.trafficTargets）
 
-- [ ] Step 1: 5 辆车（buildFallbackCar 克隆 + 随机深色系）：同向 3 辆（lane 0/1/2，速度 40–70km/h）、对向 2 辆（速度 50–80km/h，朝 +Z）；同车道最小间距 25m 生成
-- [ ] Step 2: 运动（锁定公式）：treadmill 下世界 z 每帧增量 = (scroll - 自身速度_m/s)*dt（同向；对向为 (scroll + 自身速度)*dt）；|z|>150m 时重新安置到 -140m 外随机合法车位；同车道前车 20m 内减速至前车速度
-- [ ] Step 3: 每帧输出 state.trafficTargets = [{relX, relZ}]（雷达量程 x±25m、z±60m 内的目标）
-- [ ] Step 4: 验证：lint+build；截图（路面上有车流、对向有车灯）；断言 __threeCarNav.getState().trafficTargets 数组非空且随时间变化
-- [ ] Step 5: commit `feat(three-car-nav): traffic flow feeding radar targets`
+- [x] Step 1: 5 辆车（buildFallbackCar 克隆 + 随机深色系）：同向 3 辆（lane 0/1/2，速度 40–70km/h）、对向 2 辆（速度 50–80km/h，朝 +Z）；同车道最小间距 25m 生成
+- [x] Step 2: 运动（锁定公式）：treadmill 下世界 z 每帧增量 = (scroll - 自身速度_m/s)*dt（同向；对向为 (scroll + 自身速度)*dt）；|z|>150m 时重新安置到 -140m 外随机合法车位；同车道前车 20m 内减速至前车速度
+- [x] Step 3: 每帧输出 state.trafficTargets = [{relX, relZ}]（雷达量程 x±25m、z±60m 内的目标）
+- [x] Step 4: 验证：lint+build；截图（路面上有车流、对向有车灯）；断言 __threeCarNav.getState().trafficTargets 数组非空且随时间变化
+- [x] Step 5: commit `feat(three-car-nav): traffic flow feeding radar targets`
 
 ### Task 7: HudSystem 全息 HUD（分 3 个子提交）
 
