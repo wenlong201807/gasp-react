@@ -34,8 +34,8 @@ export class CarSystem implements CarLightControllable {
 	private renderer: THREE.WebGLRenderer;
 	private root = new THREE.Group();
 	private carGroup: THREE.Group | null = null;
-	/** 车轮节点：真实 gltf 的轮子常是 Group 而非 Mesh */
-	private wheels: THREE.Object3D[] = [];
+	/** 车轮 mesh：只收真轮 mesh；名字匹配的父 Group 无 mesh，转它会让子轮绕车体中心公转 */
+	private wheels: THREE.Mesh[] = [];
 	private headlightMat: THREE.MeshStandardMaterial | null = null;
 	private taillightMat: THREE.MeshStandardMaterial | null = null;
 	private fallbackMode = false;
@@ -96,10 +96,10 @@ export class CarSystem implements CarLightControllable {
 		if (this.carGroup) {
 			const clone = this.carGroup.clone(true);
 			clone.scale.setScalar(HUD_CLONE_SCALE);
-			// 收集轮子引用（轮子可能是 Mesh 或 Group 节点）
-			const wheels: THREE.Object3D[] = [];
+			// 收集轮子 mesh（名字匹配的父 Group 无 mesh，转它会让子轮绕车体中心公转）
+			const wheels: THREE.Mesh[] = [];
 			clone.traverse((obj) => {
-				if (/wheel|tyre|tire/i.test(obj.name)) {
+				if (obj instanceof THREE.Mesh && /wheel|tyre|tire/i.test(obj.name)) {
 					wheels.push(obj);
 				}
 			});
@@ -236,8 +236,9 @@ export class CarSystem implements CarLightControllable {
 		// 环境反射统一依赖 scene.environment（对所有 MeshStandardMaterial 全局生效），不逐材质赋 envMap
 
 		model.traverse((obj) => {
-			// 轮子可能是 Mesh 或 Group 节点，绕自身 x 轴旋转对两者同样有效
-			if (/wheel|tyre|tire/i.test(obj.name)) {
+			// 只收真轮 mesh：名字匹配的父 Group（如 sm_car.gltf 的 Wheel 组）无 mesh、
+			// 位于车体原点，转它会让子轮绕车体中心公转
+			if (obj instanceof THREE.Mesh && /wheel|tyre|tire/i.test(obj.name)) {
 				this.wheels.push(obj);
 			}
 			// 找头灯/尾灯材质（启发式：含 emissive 且颜色偏暖/偏红）
