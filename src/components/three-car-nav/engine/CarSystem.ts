@@ -243,6 +243,11 @@ export class CarSystem implements CarLightControllable {
 			}
 			// 找头灯/尾灯材质（启发式：含 emissive 且颜色偏暖/偏红）
 			if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
+				// 假 AO：Car_body 的 occlusionTexture（sm_car_img0.webp）实为 UV atlas 遮罩图，three 采 R 通道会把车漆晕染出暗青斑 → 置空（aoMap 名含 img0 的兜底同置）
+				if (obj.material.name === 'Car_body' || (obj.material.aoMap && obj.material.aoMap.name.includes('img0'))) {
+					obj.material.aoMap = null;
+					obj.material.aoMapIntensity = 0;
+				}
 				const c = obj.material.color;
 				if (!this.headlightMat && c.r > 0.9 && c.g > 0.85) this.headlightMat = obj.material;
 				if (!this.taillightMat && c.r > 0.6 && c.g < 0.3) this.taillightMat = obj.material;
