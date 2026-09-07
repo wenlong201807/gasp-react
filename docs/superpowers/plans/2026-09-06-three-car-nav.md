@@ -118,12 +118,12 @@ export interface EngineControls {
 - Create: engine/CarSystem.ts、engine/fallbackCar.ts（buildFallbackCar(): THREE.Group，供主车/车流/HUD 复用）
 - Modify: ThreeCarNavEngine.ts（接入 + modelStatus 上报 onStats）
 
-- [ ] Step 1: buildFallbackCar()：低模车 Group（圆润车身 + 4 圆柱轮 + 前后发光灯带，参数化车身颜色），返回 { group, wheels: Mesh[] }
-- [ ] Step 2: CarSystem：按参考方案加载——RGBELoader(CDN_BASE + 'files/hdr/1k.hdr') + PMREMGenerator 设 scene.environment；GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(CDN_BASE + 'models/su7/sm_car.gltf')；CDN_BASE='https://z2586300277.github.io/3d-file-server/'；onError 或 15s 超时 → buildFallbackCar() 替换并 modelStatus='fallback'；成功 → 包围盒归一化到车高 1.4m 落地 y=0、modelStatus='ready'；traverse 设 envMap 反射（参考用户提供的做法）
-- [ ] Step 3: 提供 getHudClone()：主模型 ready 时 SkeletonUtils/clone 共享材质缩至 ~0.9 尺度，否则 fallback 克隆（供 Task 7b 使用）
-- [ ] Step 4: 车轮滚动：traverse 名字匹配 /wheel|tyre|tire/i 的 Object3D 绕自身 x 轴按 -speed/wheelRadius*dt 旋转；车道保持微动：yaw sin(t*0.8)*0.007rad、横向 x 加 sin(t*0.5)*0.02m（叠加在车道中心上）；车灯（头灯光锥 SpotLight×2 或发光贴片 + 尾灯 emissive）暴露 setLights(on:boolean) 供 DayNight 联动
-- [ ] Step 5: 验证：lint+build；截图（SU7 漆面有 HDR 反射）；Playwright route abort CDN 域名 → modelStatus==='fallback' 且场景仍渲染、console 仅容忍的网络错误
-- [ ] Step 6: commit `feat(three-car-nav): SU7 loader with fallback car, wheels, subtle sway`
+- [x] Step 1: buildFallbackCar()：低模车 Group（圆润车身 + 4 圆柱轮 + 前后发光灯带，参数化车身颜色），返回 { group, wheels: Mesh[] }
+- [x] Step 2: CarSystem：按参考方案加载——RGBELoader(CDN_BASE + 'files/hdr/1k.hdr') + PMREMGenerator 设 scene.environment；GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(CDN_BASE + 'models/su7/sm_car.gltf')；CDN_BASE='https://z2586300277.github.io/3d-file-server/'；onError 或 15s 超时 → buildFallbackCar() 替换并 modelStatus='fallback'；成功 → 包围盒归一化到车高 1.4m 落地 y=0、modelStatus='ready'；traverse 设 envMap 反射（参考用户提供的做法）
+- [x] Step 3: 提供 getHudClone()：主模型 ready 时 SkeletonUtils/clone 共享材质缩至 ~0.9 尺度，否则 fallback 克隆（供 Task 7b 使用）
+- [x] Step 4: 车轮滚动：traverse 名字匹配 /wheel|tyre|tire/i 的 Object3D 绕自身 x 轴按 -speed/wheelRadius*dt 旋转；车道保持微动：yaw sin(t*0.8)*0.007rad、横向 x 加 sin(t*0.5)*0.02m（叠加在车道中心上）；车灯（头灯光锥 SpotLight×2 或发光贴片 + 尾灯 emissive）暴露 setLights(on:boolean) 供 DayNight 联动
+- [x] Step 5: 验证：lint+build；截图（SU7 漆面有 HDR 反射）；Playwright route abort CDN 域名 → modelStatus==='fallback' 且场景仍渲染、console 仅容忍的网络错误
+- [x] Step 6: commit `feat(three-car-nav): SU7 loader with fallback car, wheels, subtle sway`
 
 ### Task 6: TrafficSystem 车流
 
@@ -143,12 +143,12 @@ export interface EngineControls {
 - Create: engine/HudSystem.ts（可拆 hud/ 子文件，但对外只导出 HudSystem）
 - Modify: ThreeCarNavEngine.ts（接入；传 CarSystem.getHudClone()）
 
-- [ ] Step 1 (7a 面板+底图+时速+杂项)：面板 PlaneGeometry(4.6, 2.3)，MeshBasicMaterial({map: CanvasTexture, transparent, toneMapped:false})；发光边框（更大背板 additive 渐变描边纹理）；离屏 canvas 2048×1024，静态层（底渐变/分区框/标签）仅在 timeOfDay 变化时重绘，动态层每帧；布局（锁定，px）：时速区 x60..560（数字 bold 220px 居中(310,560)，<60 青 / 60-100 浅蓝 / >100 琥珀，'km/h' 60px 其下，档位 pill）；中央 360° 洞：圆心(1024,540) r330（canvas 画雷达环，洞由 RTT 子平面覆盖）；右列 x1400..1988：路名「朝阳北路」64px + 导航行「前方 320 m · 凯恒中心」52px；右下车道图 460×260 透视梯形（当前道青色 35% 高亮，hint 箭头 1.2s 闪烁）；底部 y880..980：续航 512km · 时间 HH:MM（:SS 闪烁）· 三信号点 + 「NOC · 智驾已开启」
-- [ ] Step 2 (7a 续)：面板位姿随 cameraMode lerp（锁定）：chase→车相对 (0,3.9,+0.2) rotX -0.18；driver→(0,2.1,-7.5) rotX -0.35；side→(0,3.6,+1.8) yaw +0.35 rotX -0.2；随车速 sin 浮动 ±0.05m
-- [ ] Step 3 (7b RTT 360°小车)：WebGLRenderTarget(512,512)；mini Scene（复用 env 或 hemi+dir 简灯）+ PerspectiveCamera fov 32 半径 4.5m 环绕；每帧 setRenderTarget(rt) 渲染后复位；子平面（局部坐标按洞映射：(px-1024)/2048*4.6）材质 map=rt.texture，renderOrder 在面板后；自动旋转 yaw 0.35rad/s；pointerdown raycast 命中子平面进入拖拽（move 时 yaw -= dx*0.01、pitch clamp ±0.5rad，up 释放，拖拽后暂停自动旋转 3s）；注意 pointer 事件挂 engine 容器并随 dispose 移除
-- [ ] Step 4 (7c 数据脚本+雷达)：POI 序列循环 [凯恒中心 800m → 朝阳公园 1600m → 蓝色港湾 2400m]，distanceM 递减导航行文案，<50m 切换下一 POI（循环累加偏移）；每 ~45s 触发一次 laneChangeHint（4s 箭头提示）→ 主车 x 向目标车道中心 lerp（真实缓缓变道）→ laneIndex 更新；雷达：同心环 r90/180/270/320px 透明度衰减 + 1.2rad/s 扫描扇形 + trafficTargets 映射 (relX/25*r_max, relZ/60*r_max) 目标点（接近时脉冲放大）
-- [ ] Step 5: 验证：lint+build；Playwright：截图 HUD 特写（放大裁剪）核对六块内容齐全；断言 laneChangeHint 周期出现/消失、trafficTargets 与雷达目标数一致、speedKmh 数字与 state 同步（视觉核对）
-- [ ] Step 6: 分三个 commit：`feat(three-car-nav): hud panel base with speed and gauges` / `feat(three-car-nav): hud 360 car viewport with drag` / `feat(three-car-nav): hud radar, lane nav and poi script`
+- [x] Step 1 (7a 面板+底图+时速+杂项)：面板 PlaneGeometry(4.6, 2.3)，MeshBasicMaterial({map: CanvasTexture, transparent, toneMapped:false})；发光边框（更大背板 additive 渐变描边纹理）；离屏 canvas 2048×1024，静态层（底渐变/分区框/标签）仅在 timeOfDay 变化时重绘，动态层每帧；布局（锁定，px）：时速区 x60..560（数字 bold 220px 居中(310,560)，<60 青 / 60-100 浅蓝 / >100 琥珀，'km/h' 60px 其下，档位 pill）；中央 360° 洞：圆心(1024,540) r330（canvas 画雷达环，洞由 RTT 子平面覆盖）；右列 x1400..1988：路名「朝阳北路」64px + 导航行「前方 320 m · 凯恒中心」52px；右下车道图 460×260 透视梯形（当前道青色 35% 高亮，hint 箭头 1.2s 闪烁）；底部 y880..980：续航 512km · 时间 HH:MM（:SS 闪烁）· 三信号点 + 「NOC · 智驾已开启」
+- [x] Step 2 (7a 续)：面板位姿随 cameraMode lerp（锁定）：chase→车相对 (0,3.9,+0.2) rotX -0.18；driver→(0,2.1,-7.5) rotX -0.35；side→(0,3.6,+1.8) yaw +0.35 rotX -0.2；随车速 sin 浮动 ±0.05m
+- [x] Step 3 (7b RTT 360°小车)：WebGLRenderTarget(512,512)；mini Scene（复用 env 或 hemi+dir 简灯）+ PerspectiveCamera fov 32 半径 4.5m 环绕；每帧 setRenderTarget(rt) 渲染后复位；子平面（局部坐标按洞映射：(px-1024)/2048*4.6）材质 map=rt.texture，renderOrder 在面板后；自动旋转 yaw 0.35rad/s；pointerdown raycast 命中子平面进入拖拽（move 时 yaw -= dx*0.01、pitch clamp ±0.5rad，up 释放，拖拽后暂停自动旋转 3s）；注意 pointer 事件挂 engine 容器并随 dispose 移除
+- [x] Step 4 (7c 数据脚本+雷达)：POI 序列循环 [凯恒中心 800m → 朝阳公园 1600m → 蓝色港湾 2400m]，distanceM 递减导航行文案，<50m 切换下一 POI（循环累加偏移）；每 ~45s 触发一次 laneChangeHint（4s 箭头提示）→ 主车 x 向目标车道中心 lerp（真实缓缓变道）→ laneIndex 更新；雷达：同心环 r90/180/270/320px 透明度衰减 + 1.2rad/s 扫描扇形 + trafficTargets 映射 (relX/25*r_max, relZ/60*r_max) 目标点（接近时脉冲放大）
+- [x] Step 5: 验证：lint+build；Playwright：截图 HUD 特写（放大裁剪）核对六块内容齐全；断言 laneChangeHint 周期出现/消失、trafficTargets 与雷达目标数一致、speedKmh 数字与 state 同步（视觉核对）
+- [x] Step 6: 分三个 commit：`feat(three-car-nav): hud panel base with speed and gauges` / `feat(three-car-nav): hud 360 car viewport with drag` / `feat(three-car-nav): hud radar, lane nav and poi script`
 
 ### Task 8: 控制面板 + 调试钩子
 
