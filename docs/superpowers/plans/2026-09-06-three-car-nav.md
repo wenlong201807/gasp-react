@@ -156,10 +156,10 @@ export interface EngineControls {
 - Create: src/components/three-car-nav/HudControlPanel.tsx
 - Modify: useThreeCarNav.ts、ThreeCarNavEngine.ts（补 onStats 完整字段）
 
-- [ ] Step 1: HudControlPanel：右下角玻璃拟态面板：速度 slider 0–120 + 快捷键 30/60/90；暂停/恢复（gear P/D）；视角三选（追尾/驾驶位/侧方）；日夜三选（黄昏/白天/夜晚）；gear==='P' 时禁用速度控件；样式遵守项目现有 CSS 习惯（查 Layout/MenuDock 的写法后跟进）
-- [ ] Step 2: useThreeCarNav 绑定 controls ↔ panel；engine dev 钩子：if (import.meta.env.DEV) window.__threeCarNav = { getState: () => engine.state }（TS 用 declare global 或 as 断言，过 Biome）
-- [ ] Step 3: 验证：lint+build；Playwright：逐控件点击/拖动 → __threeCarNav.getState() 对应字段断言（speedKmh、gear、cameraMode、timeOfDay）；暂停时 RoadSystem 停滚（截图对比或 state 断言）
-- [ ] Step 4: commit `feat(three-car-nav): dom control panel and debug hook`
+- [x] Step 1: HudControlPanel：右下角玻璃拟态面板：速度 slider 0–120 + 快捷键 30/60/90；暂停/恢复（gear P/D）；视角三选（追尾/驾驶位/侧方）；日夜三选（黄昏/白天/夜晚）；gear==='P' 时禁用速度控件；样式遵守项目现有 CSS 习惯（查 Layout/MenuDock 的写法后跟进）
+- [x] Step 2: useThreeCarNav 绑定 controls ↔ panel；engine dev 钩子：if (import.meta.env.DEV) window.__threeCarNav = { getState: () => engine.state }（TS 用 declare global 或 as 断言，过 Biome）
+- [x] Step 3: 验证：lint+build；Playwright：逐控件点击/拖动 → __threeCarNav.getState() 对应字段断言（speedKmh、gear、cameraMode、timeOfDay）；暂停时 RoadSystem 停滚（截图对比或 state 断言）
+- [x] Step 4: commit `feat(three-car-nav): dom control panel and debug hook`
 
 ### Task 9: 鲁棒性 + 性能 + 终验
 
