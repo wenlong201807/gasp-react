@@ -1,7 +1,7 @@
 # three-car-nav · Playwright 验收集（仓库常驻）
 
 把 three-car-nav（`src/components/three-car-nav/`）历轮验收逻辑固化成的常驻 Playwright 测试集。
-主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-09 → 汇总判定表 → 全绿 `exit 0`。
+主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-10 → 汇总判定表 → 全绿 `exit 0`。
 
 ## 运行方式
 
@@ -56,6 +56,7 @@ TCN_KEEP_SERVER=1 node script/three-car-nav/run.mjs
 | TC-07 | `tests/tc07-lane-poi.mjs` | 变道 / POI（慢 ~55s） | 导航剩余距离两采样递减且 ≈ POI 到达里程 − `distanceM`；`laneChangeHint` 非 null 持续 3.2–5.2s 后归零；hint 消失沿后 `laneIndex` 在 lerp 中变化 |
 | TC-08 | `tests/tc08-drag.mjs` | 拖拽 | 中央小车横拖 260px → 车身取向（连通宽度）变化 ≥25px（前后裁剪归档）；相位不巧时最多重试 3 次 |
 | TC-09 | `tests/tc09-static.mjs` | 静态检查 | `pnpm lint` 与 `pnpm build` exit 0 且输出零 `error` 行 |
+| TC-10 | `tests/tc10-panel.mjs` | 控制面板 | slider/快捷键 → `speedKmh`（90 锁定值）；暂停 → `gear==='P'` + slider/快捷键 disabled（DOM）+ `distanceM` 冻结；恢复 → `'D'` + 重新推进；视角/日夜三选逐一命中 `cameraMode`/`timeOfDay` |
 
 逐条的前置 / 步骤 / 通过标准 / 关联产物见 [`cases.md`](./cases.md)。
 

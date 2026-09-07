@@ -34,6 +34,7 @@ const CASES = [
 	{ id: 'TC-07', name: '变道/POI(慢)', file: './tests/tc07-lane-poi.mjs' },
 	{ id: 'TC-08', name: '拖拽', file: './tests/tc08-drag.mjs' },
 	{ id: 'TC-09', name: '静态检查', file: './tests/tc09-static.mjs' },
+	{ id: 'TC-10', name: '控制面板', file: './tests/tc10-panel.mjs' },
 ];
 
 const onlyArg = process.argv.find((a) => a.startsWith('--only='));

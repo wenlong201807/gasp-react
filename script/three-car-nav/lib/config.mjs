@@ -35,6 +35,27 @@ export const MENU = {
 	entryName: 'Three Car Nav',
 };
 
+/** TC-10 控制面板选择器（HudControlPanel 的 aria-label 与按钮文本） */
+export const PANEL = {
+	root: '[aria-label="智驾控制台"]',
+	speedSlider: 'input[aria-label="巡航速度"]',
+	pause: 'button:has-text("暂停")',
+	resume: 'button:has-text("恢复")',
+	/** 快捷键按钮（精确文本 30/60/90，text-is 防子串误配） */
+	quick: (kmh) => `button:text-is("${kmh}")`,
+	/** 视角/日夜按钮（精确文本：追尾/驾驶位/侧方 · 黄昏/白天/夜晚） */
+	opt: (label) => `button:text-is("${label}")`,
+	/** 页内批量读速度控件 disabled 态：slider + 3 个快捷键（gear P 断言用） */
+	disabledProbe: `(() => {
+		const root = document.querySelector('[aria-label="智驾控制台"]');
+		const slider = root ? root.querySelector('input') : null;
+		const presets = root
+			? [...root.querySelectorAll('button')].filter((b) => /^\\d+$/.test((b.textContent || '').trim()))
+			: [];
+		return { slider: slider ? slider.disabled : null, presets: presets.map((b) => b.disabled) };
+	})()`,
+};
+
 /* ------------------------------------------------------------------ */
 /* HUD 纹理坐标（与 engine/HudSystem.ts 锁定常量一一对应）              */
 /* ------------------------------------------------------------------ */

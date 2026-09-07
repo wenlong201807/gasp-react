@@ -119,6 +119,19 @@
 - **通过标准**：两个命令 exit 0，且输出中无 `error` 行（biome 的 DEPRECATED info、vite 的 chunk 体积 warning 不算 error）。
 - **产物**：`TC-09-evidence.json`（每个命令的耗时、error 行、输出尾部 3500 字符）。
 
+## TC-10 控制面板
+
+- **前置**：P0（`modelStatus` ready/fallback 皆可——面板交互与模型无关，等待只为避开加载期抖动）。
+- **步骤**：
+  1. slider `fill('90')`（设 value + 派发 input → React onChange → `setTargetSpeed`）→ `getState().speedKmh === 90`；
+  2. 快捷键点 `30` → 30、点 `90` → 90（与 slider 两条路径分别断言，90 为锁定断言值）；
+  3. 点「暂停 (P)」→ `gear==='P'`；DOM 断言（页内探针 `PANEL.disabledProbe`）：slider + 3 个快捷键全部 `disabled`（面板由 5Hz stats 驱动，轮询预算 2.5s）；间隔 0.9s 两次采样 `distanceM` 相等（P 档 `HudSystem.updateScripts` 冻结里程 = RoadSystem 停滚同链路）；归档 P 档截图；
+  4. 点「恢复 (D)」→ `gear==='D'`；速度控件恢复可用；再次采样 `distanceM` 推进 > 5m（90km/h ≈ 22.5m/0.9s）；
+  5. 视角三选逐个点击（驾驶位→`driver`、侧方→`side`、追尾→`chase`）逐一断言；日夜三选逐个点击（白天→`day`、夜晚→`night`、黄昏→`dusk`）逐一断言。
+- **通过标准**：上述 13 项检查全过（slider/快捷键两路径、P/D 两态 DOM + 里程冻结/推进、视角×3、日夜×3、非网络 console error=0、pageerror=0）。
+- **产物**：`TC-10-panel-paused.png`（P 档 disabled 态）、`TC-10-panel.png`、`TC-10-evidence.json`（逐步 trace：每步 expect/got + distanceM 采样对）。
+- **实现锚点**：`HudControlPanel.tsx`（`aria-label` 与按钮文本即选择器，集中在 `lib/config.mjs#PANEL`）；`getState()` 直读 engine state 无节流，点击后可即时断言；DOM disabled 态经 5Hz stats → React 重渲染，故用轮询。
+
 ---
 
 ## 附：洞的透明性对自动化判定的影响（取舍记录）
