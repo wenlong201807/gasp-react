@@ -150,6 +150,24 @@ export async function startDevServer({ port, cwd, logPath }) {
 	throw new Error(`dev server 未在 60s 内监听 ${port}（日志：${logPath}）`);
 }
 
+/** TC-14：vite preview 生产服（服务 dist 产物）。停止复用 stopDevServer（同为进程组 + 端口确认） */
+export async function startPreviewServer({ port, cwd, logPath }) {
+	const log = fs.openSync(logPath, 'a');
+	const child = spawn('pnpm', ['preview', '--port', String(port), '--strictPort'], {
+		cwd,
+		detached: true,
+		stdio: ['ignore', log, log],
+	});
+	fs.closeSync(log);
+	const t0 = Date.now();
+	while (Date.now() - t0 < 60000) {
+		await sleep(400);
+		if (await isPortOpen(port)) return { child, waitedMs: Date.now() - t0 };
+		if (child.exitCode !== null) break;
+	}
+	throw new Error(`preview server 未在 60s 内监听 ${port}（日志：${logPath}）`);
+}
+
 export async function stopDevServer(child, { port }) {
 	if (!child || child.exitCode !== null) return;
 	try {

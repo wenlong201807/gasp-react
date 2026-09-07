@@ -1,23 +1,34 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { EventLoopPage } from '@/components/event-loop';
 import { FiberTodoPage } from '@/components/fiber-todo/FiberTodoPage';
 import { FPSPanel } from '@/components/fps';
 import { Layout } from '@/components/layout';
 import { LottieAnimation } from '@/components/lottie';
-import type { AnimationId } from '@/components/menu';
 import { MenuDock } from '@/components/menu';
 import { WebVitalsPanel } from '@/components/performance';
 import { ScrollAnimation } from '@/components/scroll-animation';
 import { ThreeCarNavPage } from '@/components/three-car-nav';
+import { UpdateToast } from '@/components/UpdateToast';
 import { UrlLifecyclePage } from '@/components/url-lifecycle';
-
-type AnimationType = AnimationId;
+import { useFullscreen } from '@/hooks/useFullscreen';
+import { navigate, useHashRoute } from '@/hooks/useHashRoute';
+import { applyUpdate, getWaitingSW, subscribeWaitingSW } from '@/sw';
 
 function App() {
-	const [currentAnimation, setCurrentAnimation] = useState<AnimationType>('scroll');
+	const route = useHashRoute();
+	const fullscreen = useFullscreen();
+	const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(getWaitingSW);
+
+	useEffect(
+		() =>
+			subscribeWaitingSW(() => {
+				setWaitingSW(getWaitingSW());
+			}),
+		[]
+	);
 
 	const renderAnimation = () => {
-		switch (currentAnimation) {
+		switch (route) {
 			case 'scroll':
 				return <ScrollAnimation />;
 			case 'lottie':
@@ -36,11 +47,12 @@ function App() {
 	};
 
 	return (
-		<Layout>
+		<Layout fullscreen={fullscreen}>
 			<FPSPanel />
 			<WebVitalsPanel />
 			{renderAnimation()}
-			<MenuDock currentAnimation={currentAnimation} onSelect={setCurrentAnimation} />
+			{fullscreen.isFullscreen ? null : <MenuDock currentAnimation={route} onSelect={navigate} />}
+			{waitingSW ? <UpdateToast onApply={applyUpdate} /> : null}
 		</Layout>
 	);
 }

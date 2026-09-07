@@ -156,6 +156,64 @@
 - **产物**：`TC-12-perf.png`、`TC-12-evidence.json`（calls 序列 / fps 序列与均值 / staticRedraws 采样对与对照 / pixelRatio 比对 / 最终 renderInfo）。
 - **实现锚点**：`ThreeCarNavEngine.ts#getRenderInfo()`（`renderer.info.render.calls`，主场景 render 为每帧最后一次 render，读数即主场景 draw calls；`staticRedraws` 取自 `HudSystem.staticRedrawCount`，仅 `redrawStaticLayer` 自增——构造首绘 1 次，timeOfDay 变化各 +1）；`renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))`。draw calls 达标手段：RoadSystem 段内静态内容按顶点色合并为单 mesh（8 段 ~118 → ~18 calls）、TrafficSystem 车身/灯带合并 + 20 轮共用 1 个 InstancedMesh（55 → 21 calls），视觉逐项等价（颜色/位姿/种子随机同序）。
 
+## TC-13 hash 路由
+
+- **前置**：P0。
+- **步骤**：
+  1. 直链 `goto(APP_URL + '#/three-car-nav')`（不点菜单）→ 等 `<canvas>`；
+  2. 展开菜单 → 点「Scroll Animation」→ 等 600ms 读 `location.hash` 与页面标记；
+  3. `goto(APP_URL + '#/unknown-id')`（同文档 hashchange）→ 等 `<canvas>` → 读 hash；
+  4. `page.goBack()` → 等 600ms 读 hash 与页面标记；
+  5. 读 `navigator.serviceWorker.controller`。
+- **通过标准**：
+  - ① hash === `#/three-car-nav` 且 canvas === 1（直链即智驾页，无需菜单点入）；
+  - ② hash === `#/scroll` 且 scroll 页 h1（GSAP React）可见、canvas === 0（dock 点击 → navigate → hashchange → 页面切换，与直链共用同一条解析路径）；
+  - ③ hash === `#/three-car-nav` 且 canvas === 1（未知 id 落回智驾页，URL 经 replaceState 归一、不追加历史）；
+  - ④ hash === `#/scroll` 且 scroll 页可见（back 触发 hashchange，页面随路由回切）；
+  - ⑤ dev 模式 `controller === null`（SW 仅 PROD 注册）；非网络类 console error = 0；pageerror = 0。
+- **产物**：`TC-13-hash-route-final.png`、`TC-13-evidence.json`（四步 hash 序列 + 各步标记采样）。
+- **实现锚点**：`src/hooks/useHashRoute.ts`（解析/归一/hashchange 汇聚，dock 点击、前进后退、直链三入口同构）；`App.tsx` 以路由替代内部 state，`MenuDock` active 高亮读路由。
+
+## TC-14 SW 冒烟
+
+- **前置**：生产产物 + preview 生产服（`vite preview --port 4173 --strictPort`，用例自管起停）。
+  **注意（存量地雷）**：仓库 `.env` 钉了 `NODE_ENV=development` 且 vite 构建会读取——默认 `pnpm build` 产出 dev 模式 bundle（`import.meta.env.PROD=false`，SW 注册代码被 DCE，React 为 jsxDEV 运行时）。本用例在产物缺失或含 jsxDEV 时自动以 `NODE_ENV=production` 重建（故全量套件中 TC-09 的默认构建产物会被本用例重建一次）。
+- **步骤**：
+  1. 确保生产产物 → 起 preview（4173）→ `goto(PREVIEW_URL/#/three-car-nav)`；
+  2. 等 `getRegistration()` 非空（页面 load 后 register）→ `reload` → 等 `controller !== null`；
+  3. 读 `caches.keys()`、shell 缓存条目、`fetch('/sw-manifest.json')` 的 version；
+  4. 等 `<canvas>` → 读 `[data-update-toast]` 计数；
+  5. 停 preview 并确认 4173 释放。
+- **通过标准**：注册成功且 `controller.scriptURL` 以 `/sw.js` 结尾；`caches` 含 `app-shell-<version>` 且缓存名与 manifest 的 version 一致；缓存条目含 `'/'` 与 ≥1 条 `/assets/*`；toast 初始隐藏（首次安装不提示）；非网络 console error = 0；pageerror = 0；preview 端口释放。`cdn-models-v1`（CDN 模型经 SW 缓存）记录为证据，不作硬断言（依赖外网可达）。
+- **更新流（手工验证项，不自动化）**：
+  1. `NODE_ENV=production pnpm build`（记下 `dist/sw-manifest.json` 的 version）；
+  2. 改动任意源码后再次同命令构建 → version 与 `dist/sw.js` 字节均变化；
+  3. preview 起服务，打开已被旧 SW 控制的页面；
+  4. DevTools → Application → Service Workers → Update（或等 5 分钟轮询 / 切回标签页触发 visibilitychange 检查）；
+  5. 右下角出现「发现新版本」toast → 点「立即更新」→ 新 SW 接管（controllerchange）→ 页面自动刷新一次，刷新后 toast 消失。
+  不做自动化的原因：更新链路依赖真实的新旧 SW 交接与用户点击，在 Playwright 上下文里伪造 waiting/controllerchange 的注入式断言不可信，不造假。
+- **产物**：`TC-14-sw-preview.png`、`TC-14-evidence.json`（注册/缓存原文 + 手工步骤清单）、`TC-14-preview.log`。
+- **实现锚点**：`public/sw.js`（install 按 manifest 预缓存、activate 按缓存名清旧、fetch 三策略、SKIP_WAITING 消息）；`vite.config.ts` swManifest 插件（writeBundle 产出 sw-manifest.json 并把 version 注入 dist/sw.js 占位符——registration.update() 只按 sw.js 字节比对，不注入则更新提示永不触发）；`src/sw.ts`（PROD 注册 + 5 分钟/visibilitychange 轮询 + waiting 通知 + controllerchange 防循环 reload）；`src/components/UpdateToast.tsx`。
+
+---
+
+## TC-15 全屏入口
+
+- **前置**：P0（dev server，任一路由皆有 title 栏）。
+- **背景**：feat/fullscreen 分支将 event-loop / url-lifecycle 两页各自的全屏入口收敛为全局 title 栏（logo 旁）唯一入口，全屏目标从各页 `.experience` 容器改为 `document.documentElement`，完全沉浸（全屏态隐藏 title 栏与 dock，留角落半透明退出控件，Esc 原生退出）。两页旧按钮/handler/样式全部删除。
+- **步骤**：
+  1. 首页断言 title 栏按钮存在且 aria-label 正确（`getByRole('button', { name: '进入全屏' })` 全页唯一、位于 `header` 内）；
+  2. 点击进入全屏 → 等 600ms 读 `document.fullscreenElement` → 沉浸 DOM 断言：title 栏 logo（`GSAP-React`，exact）不可见、dock handle（`button[aria-label="展开菜单"]`）不在 DOM、角落退出控件（name `退出全屏`）出现；截图存证；
+  3. 退出恢复：真全屏路径先采 Esc 软证据（见下取舍），再进入一次走角落退出控件；stub 路径直接走控件 + 恢复原生 getter 派发 `fullscreenchange`。断言 `fullscreenElement` 归空、logo/dock 回来、退出控件消失；
+  4. 旧入口缺席（event-loop）：直链 `#/event-loop` → 点第一个 preset 卡片 → 三重缺席断言（`getByRole(name: '⛶ 全屏')`=0、`button:has-text("⛶")`=0、`button:has-text("全屏")`=0）+ title 栏新入口仍唯一在 header + 控制条「⏮ 重播」仍在（非全屏功能一字不动）；
+  5. 旧入口缺席（url-lifecycle）：直链 `#/url-lifecycle` → 点第一幕 → 同上断言组。
+- **通过标准**：上述 7 项检查全过（title 入口唯一、沉浸 DOM、退出恢复、两页旧入口缺席、非网络 console error=0、pageerror=0）。
+- **headless 取舍（不造假声明）**：
+  - **Fullscreen API 主路径**：本仓 headless Chrome（`chromium.launch({ channel: 'chrome' })`）实测 `requestFullscreen()` resolve、`fullscreenElement=documentElement`、`fullscreenchange` 触发——TC-15 主路径即真全屏断言（evidence `mode: "native"`）。若未来环境受限（点击后 `fullscreenElement` 仍 null），用例如实降级：stub `document.fullscreenElement` getter + 派发 `fullscreenchange`，断言「事件 → 状态 → DOM」UI 链路，evidence 记 `mode: "stubbed"`，不伪造真全屏。
+  - **Esc 原生退出**：headless 实测按 Esc **不退出**全屏（浏览器 UI 层快捷键在 headless 缺失，探针 `fsAfterEsc: true`）——产品代码层面 Esc 退出是浏览器对 Fullscreen API 的内置行为，无法在 headless 自动化验证。处理与 TC-14 更新流同款：采软证据（`escEffective` 如实入 evidence，不作硬断言），未生效时 `evaluate(exitFullscreen)` 自愈恢复常态后继续控件退出路径。真浏览器 Esc 行为属手工验证项。
+- **产物**：`TC-15-fullscreen-immersive.png`（沉浸态截图）、`TC-15-fullscreen-legacy-absent.png`、`TC-15-evidence.json`（六步 trace：每步 ok + 实测值 + mode + escEffective + console 分类）。
+- **实现锚点**：`src/hooks/useFullscreen.ts`（request/exit/toggle + `fullscreenchange` 同步 + 拒绝静默降级；默认 `documentElement`，可选 targetRef 保留元素级能力）；`src/components/layout/Layout.tsx`（title 旁 `fullscreenToggle` 按钮 + 沉浸分支渲染 `fullscreenExit` 角落控件）；`src/App.tsx`（`useFullscreen` 单一状态源 + 全屏态不渲染 `MenuDock`）；设计文档 `docs/superpowers/specs/2026-09-07-fullscreen-entry-design.md`。
+
 ---
 
 ## 附：洞的透明性对自动化判定的影响（取舍记录）

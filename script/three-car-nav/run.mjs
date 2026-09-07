@@ -2,8 +2,9 @@
 /**
  * three-car-nav Playwright 验收集主入口。
  *
- * 流程：端口预检（清残留）→ 起 dev server（用完必杀）→ 顺序执行 TC-01..TC-12 →
+ * 流程：端口预检（清残留）→ 起 dev server（用完必杀）→ 顺序执行 TC-01..TC-15 →
  *       汇总判定表（每用例 ✅/❌ + 证据路径）→ 全绿 exit 0，否则 exit 1。
+ *       TC-14 额外要求生产产物并自管 vite preview（4173）起停。
  *
  * 用法：node script/three-car-nav/run.mjs [--only TC01,TC03]
  * 环境变量：TCN_HEADED=1 有头 Chrome；TCN_KEEP_SERVER=1 复用已起服务（默认用完即杀）
@@ -37,6 +38,9 @@ const CASES = [
 	{ id: 'TC-10', name: '控制面板', file: './tests/tc10-panel.mjs' },
 	{ id: 'TC-11', name: '鲁棒性', file: './tests/tc11-robustness.mjs' },
 	{ id: 'TC-12', name: '性能', file: './tests/tc12-performance.mjs' },
+	{ id: 'TC-13', name: 'hash 路由', file: './tests/tc13-hash-route.mjs' },
+	{ id: 'TC-14', name: 'SW 冒烟', file: './tests/tc14-sw.mjs' },
+	{ id: 'TC-15', name: '全屏入口', file: './tests/tc15-fullscreen.mjs' },
 ];
 
 const onlyArg = process.argv.find((a) => a.startsWith('--only='));

@@ -16,6 +16,18 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 
 export const APP_URL = 'http://localhost:5173';
 export const DEV_SERVER_PORT = 5173;
+
+/** TC-14 生产服（vite preview，服务 dist 产物；用例内起停自理） */
+export const PREVIEW_SERVER_PORT = 4173;
+export const PREVIEW_URL = `http://localhost:${PREVIEW_SERVER_PORT}`;
+
+/**
+ * 生产构建的环境变量覆盖：仓库 .env 钉了 NODE_ENV=development 且 vite 构建会读取它，
+ * 默认 pnpm build 产出 dev 模式 bundle（import.meta.env.PROD=false → SW 注册代码被 DCE）。
+ * TC-14 需要真正的生产产物时必须以该覆盖构建。
+ */
+export const PROD_BUILD_ENV = { ...process.env, NODE_ENV: 'production' };
+
 export { REPO_ROOT };
 
 /** CDN 域名（CarSystem.CDN_BASE 的 host）：TC-03 route-abort 目标 */
@@ -33,6 +45,23 @@ export const MENU = {
 	expandAlt: 'button[aria-label="动画视图切换"]',
 	entry: 'button:has-text("Three Car Nav")',
 	entryName: 'Three Car Nav',
+	/** TC-13：dock 上切换到 scroll 页的菜单项 */
+	entryScroll: 'button:has-text("Scroll Animation")',
+	/** scroll 页独有标记（h1 标题） */
+	scrollMarker: 'h1:has-text("GSAP React")',
+};
+
+/** TC-15 全屏入口选择器（Layout title 栏按钮 / 沉浸态退出控件 / 旧入口特征） */
+export const FULLSCREEN = {
+	/** title 栏（logo 旁）进入全屏按钮的 aria-label */
+	enter: 'button[aria-label="进入全屏"]',
+	/** 沉浸态角落退出控件的 aria-label */
+	exit: 'button[aria-label="退出全屏"]',
+	/** title 栏 logo 文本（沉浸态应不可见；exact 防与 scroll 页 h1「GSAP React」混淆） */
+	logo: 'GSAP-React',
+	/** 旧全屏按钮特征（两页控制条，收敛后必须缺席） */
+	legacyIcon: '⛶',
+	legacyName: '⛶ 全屏',
 };
 
 /** TC-10 控制面板选择器（HudControlPanel 的 aria-label 与按钮文本） */

@@ -22,7 +22,8 @@
     "docker:prod": "docker compose -p gsap-react -f docker/docker-compose.yml --profile prod up -d",
     "docker:stop": "docker compose -p gsap-react -f docker/docker-compose.yml --profile prod down --remove-orphans",
     "health-check": "bash scripts/health-check.sh",
-    "deploy": "bash scripts/deploy.sh"
+    "deploy": "bash scripts/deploy.sh",
+    "prepare": "husky"
   },
   "dependencies": {
     "gsap": "^3.12.5",
@@ -40,12 +41,8 @@
     "@types/react-dom": "^18.3.0",
     "@types/three": "^0.185.4",
     "@vitejs/plugin-react": "^4.3.1",
+    "husky": "^9.1.7",
     "typescript": "^5.5.4",
     "vite": "^5.4.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "pnpm run pre-commit"
-    }
   }
 }
