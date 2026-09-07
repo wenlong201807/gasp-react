@@ -111,6 +111,8 @@ export class CarSystem implements CarLightControllable {
 			group.scale.setScalar(HUD_CLONE_SCALE);
 			setFallbackCarLights(group, this.lightsOn);
 			group.userData.wheels = wheels;
+			/* Task 9 dispose 审计：fallback 克隆独享几何/材质，HUD 弃用时应就地释放 */
+			group.userData.ownsResources = true;
 			return group;
 		}
 		// SU7 加载成功：clone 共享材质 / 共享几何
@@ -126,12 +128,14 @@ export class CarSystem implements CarLightControllable {
 				}
 			});
 			clone.userData.wheels = wheels;
+			clone.userData.ownsResources = false; // 与主模型共享，处置权在 CarSystem
 			return clone;
 		}
 		// 仍在 loading：返回临时 fallback（HUD 不会因为主车未好而空白）
 		const { group, wheels } = buildFallbackCar(0x9aa3ad);
 		group.scale.setScalar(HUD_CLONE_SCALE);
 		group.userData.wheels = wheels;
+		group.userData.ownsResources = true;
 		return group;
 	}
 
@@ -266,13 +270,32 @@ export class CarSystem implements CarLightControllable {
 			undefined,
 			() => {
 				pmrem.dispose();
-			},
+			}
 		);
 
 		gltf.load(
 			MODEL_URL,
 			(gltfData) => {
 				if (this.loaded) return;
+				/* Task 9 dispose 审计：引擎已销毁（StrictMode 双挂载/快速切页）时到港的模型
+				   不再挂树，就地释放几何/材质/贴图，防在途资源泄漏 */
+				if (this.disposed) {
+					gltfData.scene.traverse((obj) => {
+						if (obj instanceof THREE.Mesh) {
+							obj.geometry?.dispose();
+							const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+							for (const mat of mats) {
+								for (const value of Object.values(mat)) {
+									if ((value as THREE.Texture | null)?.isTexture) {
+										(value as THREE.Texture).dispose();
+									}
+								}
+								if (mat instanceof THREE.Material) mat.dispose();
+							}
+						}
+					});
+					return;
+				}
 				this.loaded = true;
 				if (this.loadTimer) {
 					clearTimeout(this.loadTimer);
@@ -282,9 +305,9 @@ export class CarSystem implements CarLightControllable {
 			},
 			undefined,
 			() => {
-				if (this.loaded) return;
+				if (this.disposed || this.loaded) return;
 				this.spawnFallback('error');
-			},
+			}
 		);
 	}
 
@@ -319,7 +342,10 @@ export class CarSystem implements CarLightControllable {
 			// 找头灯/尾灯材质（启发式：含 emissive 且颜色偏暖/偏红）
 			if (obj instanceof THREE.Mesh && obj.material instanceof THREE.MeshStandardMaterial) {
 				// 假 AO：Car_body 的 occlusionTexture（sm_car_img0.webp）实为 UV atlas 遮罩图，three 采 R 通道会把车漆晕染出暗青斑 → 置空（aoMap 名含 img0 的兜底同置）
-				if (obj.material.name === 'Car_body' || (obj.material.aoMap && obj.material.aoMap.name.includes('img0'))) {
+				if (
+					obj.material.name === 'Car_body' ||
+					(obj.material.aoMap && obj.material.aoMap.name.includes('img0'))
+				) {
 					obj.material.aoMap = null;
 					obj.material.aoMapIntensity = 0;
 				}
@@ -379,7 +405,9 @@ export class CarSystem implements CarLightControllable {
 	 * 三角质心按 z 符号分前后两簇，各簇取面积加权质心。
 	 * @returns [z<0 簇质心, z≥0 簇质心]（几何 local 坐标）；无 position / 无三角 / 任一簇为空 → null
 	 */
-	private splitPairedWheelCenters(geo: THREE.BufferGeometry): [THREE.Vector3, THREE.Vector3] | null {
+	private splitPairedWheelCenters(
+		geo: THREE.BufferGeometry
+	): [THREE.Vector3, THREE.Vector3] | null {
 		const pos = geo.getAttribute('position');
 		if (!pos) return null;
 		const index = geo.getIndex();

@@ -11,6 +11,17 @@ import { TrafficSystem } from './TrafficSystem';
 /** onStats 合并快照：引擎统计 + 驾驶状态（节流 5Hz 推送） */
 export type EngineSnapshot = EngineStats & DrivingState;
 
+/** Task 9 性能采样（dev 钩子 getRenderInfo / TC-12 断言） */
+export interface RenderInfo {
+	/** 最近一帧主场景 draw calls（renderer.info.render.calls） */
+	calls: number;
+	triangles: number;
+	fps: number;
+	pixelRatio: number;
+	/** HudSystem 静态层累计重绘次数（仅 timeOfDay 变化时 +1） */
+	staticRedraws: number;
+}
+
 export type StatsListener = (snapshot: EngineSnapshot) => void;
 
 const STATS_INTERVAL_MS = 200; // 5Hz
@@ -55,6 +66,18 @@ export class ThreeCarNavEngine {
 	private statsTimerMs = 0;
 	private frameCount = 0;
 	private onResize = () => this.resize();
+	/** WebGL 上下文丢失：阻止默认放行恢复，并暂停 RAF（Task 9 Step 1） */
+	private onContextLost = (event: Event): void => {
+		event.preventDefault();
+		this.renderer.setAnimationLoop(null);
+		this.running = false;
+	};
+	/** 上下文恢复：复位 GL 状态缓存、丢弃停摆期 dt，重启 RAF（GL 资源由 three 内部重建） */
+	private onContextRestored = (): void => {
+		this.renderer.resetState();
+		this.clock.getDelta();
+		this.start();
+	};
 
 	constructor(container: HTMLElement) {
 		this.container = container;
@@ -62,6 +85,8 @@ export class ThreeCarNavEngine {
 		this.scene = new THREE.Scene();
 		this.camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+		/* Task 9 性能钳制：DPR 封顶 2（高分屏全分辨率渲染得不偿失） */
+		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
 		this.roadSystem = new RoadSystem(this.scene);
 		this.citySystem = new CitySystem(this.scene);
@@ -118,10 +143,15 @@ export class ThreeCarNavEngine {
 		if (import.meta.env.DEV) {
 			window.__threeCarNav = {
 				getState: () => ({ ...this.stats, ...this.state }),
+				getRenderInfo: () => this.getRenderInfo(),
 			};
 		}
 
 		window.addEventListener('resize', this.onResize);
+		/* Task 9：上下文丢失暂停 RAF、恢复复位重启（监听挂 canvas，dispose 移除） */
+		const canvas = this.renderer.domElement;
+		canvas.addEventListener('webglcontextlost', this.onContextLost);
+		canvas.addEventListener('webglcontextrestored', this.onContextRestored);
 	}
 
 	/** 订阅合并统计快照，返回取消订阅函数 */
@@ -129,6 +159,18 @@ export class ThreeCarNavEngine {
 		this.listeners.add(listener);
 		return () => {
 			this.listeners.delete(listener);
+		};
+	}
+
+	/** Task 9 性能采样：最近一帧主场景 draw calls / 三角面 / fps / pixelRatio / HUD 静态层重绘数 */
+	getRenderInfo(): RenderInfo {
+		const info = this.renderer.info.render;
+		return {
+			calls: info.calls,
+			triangles: info.triangles,
+			fps: this.stats.fps,
+			pixelRatio: this.renderer.getPixelRatio(),
+			staticRedraws: this.hudSystem.staticRedrawCount,
 		};
 	}
 
@@ -144,6 +186,12 @@ export class ThreeCarNavEngine {
 		this.renderer.setAnimationLoop(null);
 		this.running = false;
 		window.removeEventListener('resize', this.onResize);
+		const canvas = this.renderer.domElement;
+		canvas.removeEventListener('webglcontextlost', this.onContextLost);
+		canvas.removeEventListener('webglcontextrestored', this.onContextRestored);
+		if (import.meta.env.DEV) {
+			window.__threeCarNav = undefined; // 卸载后不再暴露已销毁引擎
+		}
 		this.listeners.clear();
 
 		// 子系统先自释放（几何/材质/纹理/灯光全清）并从场景摘除
@@ -239,6 +287,9 @@ export class ThreeCarNavEngine {
 /** e2e 断言钩子的窗口类型声明（随引擎 DEV 钩子一同生效） */
 declare global {
 	interface Window {
-		__threeCarNav?: { getState: () => EngineSnapshot };
+		__threeCarNav?: {
+			getState: () => EngineSnapshot;
+			getRenderInfo: () => RenderInfo;
+		};
 	}
 }

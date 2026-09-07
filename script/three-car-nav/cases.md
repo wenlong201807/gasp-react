@@ -132,6 +132,30 @@
 - **产物**：`TC-10-panel-paused.png`（P 档 disabled 态）、`TC-10-panel.png`、`TC-10-evidence.json`（逐步 trace：每步 expect/got + distanceM 采样对）。
 - **实现锚点**：`HudControlPanel.tsx`（`aria-label` 与按钮文本即选择器，集中在 `lib/config.mjs#PANEL`）；`getState()` 直读 engine state 无节流，点击后可即时断言；DOM disabled 态经 5Hz stats → React 重渲染，故用轮询。
 
+## TC-11 鲁棒性
+
+- **前置**：P0（modelStatus ready/fallback 皆可）。
+- **步骤**：
+  1. 切走→切回 ×2：展开菜单 → 点「Scroll Animation」（three-car-nav 卸载，期望 `canvas === 0`）→ 展开菜单 → 点「Three Car Nav」→ 期望 `canvas === 1` 且 `modelStatus` 在 20s 内恢复 ready/fallback；第二轮重复；
+  2. 上下文丢失：`page.evaluate` 在 canvas 上派发合成 `webglcontextlost`（cancelable）→ 等 1.3s + 0.6s 两次采样，`distanceM` 与 `fps` 均与派发前完全一致（RAF 停摆 → 5Hz stats 冻结；引擎 `onContextLost` 暂停 `setAnimationLoop`，three r185 内部同步置 `_isContextLost` 使 render no-op）且 canvas 仍为 1；
+  3. 上下文恢复：派发合成 `webglcontextrestored` → 等 1.6s → `distanceM` 推进 > 3m（60km/h ≈ 16.7m/s）且 `modelStatus` 不变。
+- **通过标准**：上述 7 项检查全过（两轮切换 canvas 恒 1 + status 可恢复、lost 冻结、lost 后 canvas 仍在、restored 恢复推进、非网络 console error=0、pageerror=0）。
+- **产物**：`TC-11-robust-restored.png`、`TC-11-evidence.json`（两轮切换记录 + lost/restored 采样对）。
+- **③WebGL 不可用降级（代码走查项，不做自动化断言）**：headless Chrome 无法真实禁用 WebGL（`--disable-webgl` 会连同 headless 的 SwiftShader 一并破坏页面其他前置），本套件不伪造该场景。落点走查：`useThreeCarNav.ts` 以 try/catch 捕获 `new ThreeCarNavEngine()` 失败 → `webglUnsupported=true` 且**不挂 canvas**；`ThreeCarNavPage.tsx` 渲染玻璃拟态降级卡片（文案「当前环境不支持 WebGL」，复用 `hud-control-panel.module.css`）；引擎构造在 `appendChild` 之前抛出，故失败路径无 canvas 残留、无监听器泄漏。
+- **实现锚点**：`ThreeCarNavEngine.ts` `onContextLost`/`onContextRestored`（监听挂 `renderer.domElement`，`dispose` 移除；restored 后 `renderer.resetState()` + 时钟 dt 丢弃 + 重启 RAF）。
+
+## TC-12 性能
+
+- **前置**：P0 且 `modelStatus` ready/fallback 皆可（等待只为避开加载期抖动）。
+- **步骤**：
+  1. `getRenderInfo()` 8 次采样（间隔 400ms，覆盖视锥内车流/路段变化）；
+  2. `getState().fps` 31 次采样（间隔 1s，≈30s 窗口）取均值；
+  3. `getRenderInfo().staticRedraws` 间隔 3s 两次采样（timeOfDay 保持 dusk 不动）；随后点「白天」再采样（活性对照：必须 +1，证明计数器真实反映 `HudSystem.redrawStaticLayer` 而非恒定值）；点「黄昏」还原；
+  4. `getRenderInfo().pixelRatio` 与页内 `Math.min(devicePixelRatio, 2)` 比对。
+- **通过标准**：每次采样 `calls < 120`（计划锁定阈值；实测 99–108，见 evidence）；fps 30s 均值 ≥ 30（实测 60，vsync 封顶）；timeOfDay 不变窗口 `staticRedraws` 不增且初值 ≥ 1；切档后 `staticRedraws` 增加（活性）；`pixelRatio === min(dpr,2)` 且 ≤ 2；非网络 console error=0；pageerror=0。
+- **产物**：`TC-12-perf.png`、`TC-12-evidence.json`（calls 序列 / fps 序列与均值 / staticRedraws 采样对与对照 / pixelRatio 比对 / 最终 renderInfo）。
+- **实现锚点**：`ThreeCarNavEngine.ts#getRenderInfo()`（`renderer.info.render.calls`，主场景 render 为每帧最后一次 render，读数即主场景 draw calls；`staticRedraws` 取自 `HudSystem.staticRedrawCount`，仅 `redrawStaticLayer` 自增——构造首绘 1 次，timeOfDay 变化各 +1）；`renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2))`。draw calls 达标手段：RoadSystem 段内静态内容按顶点色合并为单 mesh（8 段 ~118 → ~18 calls）、TrafficSystem 车身/灯带合并 + 20 轮共用 1 个 InstancedMesh（55 → 21 calls），视觉逐项等价（颜色/位姿/种子随机同序）。
+
 ---
 
 ## 附：洞的透明性对自动化判定的影响（取舍记录）

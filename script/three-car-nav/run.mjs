@@ -2,7 +2,7 @@
 /**
  * three-car-nav Playwright 验收集主入口。
  *
- * 流程：端口预检（清残留）→ 起 dev server（用完必杀）→ 顺序执行 TC-01..TC-09 →
+ * 流程：端口预检（清残留）→ 起 dev server（用完必杀）→ 顺序执行 TC-01..TC-12 →
  *       汇总判定表（每用例 ✅/❌ + 证据路径）→ 全绿 exit 0，否则 exit 1。
  *
  * 用法：node script/three-car-nav/run.mjs [--only TC01,TC03]
@@ -35,6 +35,8 @@ const CASES = [
 	{ id: 'TC-08', name: '拖拽', file: './tests/tc08-drag.mjs' },
 	{ id: 'TC-09', name: '静态检查', file: './tests/tc09-static.mjs' },
 	{ id: 'TC-10', name: '控制面板', file: './tests/tc10-panel.mjs' },
+	{ id: 'TC-11', name: '鲁棒性', file: './tests/tc11-robustness.mjs' },
+	{ id: 'TC-12', name: '性能', file: './tests/tc12-performance.mjs' },
 ];
 
 const onlyArg = process.argv.find((a) => a.startsWith('--only='));

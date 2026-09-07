@@ -4,6 +4,7 @@
  */
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /** fallback 车分组：group 含整车，wheels 为 4 个轮 mesh 引用（供主车滚动旋转用） */
 export interface FallbackCarResult {
@@ -54,7 +55,7 @@ export function buildFallbackCar(bodyColor = 0x9aa3ad): FallbackCarResult {
 	});
 	const windshield = new THREE.Mesh(
 		new THREE.BoxGeometry(BODY_W * 0.82, BODY_H * 0.5, BODY_L * 0.52),
-		glassMat,
+		glassMat
 	);
 	windshield.position.set(0, WHEEL_R + BODY_H * 0.7 + (BODY_H * 0.55) / 2, -BODY_L * 0.05);
 	group.add(windshield);
@@ -70,19 +71,31 @@ export function buildFallbackCar(bodyColor = 0x9aa3ad): FallbackCarResult {
 		emissive: 0xff2020,
 		emissiveIntensity: 0.0,
 	});
-	const hl1 = new THREE.Mesh(
-		new THREE.BoxGeometry(HEADLIGHT_W, HEADLIGHT_H, 0.04),
-		headlightMat,
-	);
+	const hl1 = new THREE.Mesh(new THREE.BoxGeometry(HEADLIGHT_W, HEADLIGHT_H, 0.04), headlightMat);
 	const hl2 = hl1.clone();
-	hl1.position.set(-BODY_W / 2 + HEADLIGHT_W / 2 + 0.1, WHEEL_R + BODY_H * 0.45, -BODY_L / 2 - 0.01);
+	hl1.position.set(
+		-BODY_W / 2 + HEADLIGHT_W / 2 + 0.1,
+		WHEEL_R + BODY_H * 0.45,
+		-BODY_L / 2 - 0.01
+	);
 	hl2.position.set(BODY_W / 2 - HEADLIGHT_W / 2 - 0.1, WHEEL_R + BODY_H * 0.45, -BODY_L / 2 - 0.01);
 	group.add(hl1, hl2);
 
-	const tl1 = new THREE.Mesh(new THREE.BoxGeometry(HEADLIGHT_W * 1.4, HEADLIGHT_H, 0.04), taillightMat);
+	const tl1 = new THREE.Mesh(
+		new THREE.BoxGeometry(HEADLIGHT_W * 1.4, HEADLIGHT_H, 0.04),
+		taillightMat
+	);
 	const tl2 = tl1.clone();
-	tl1.position.set(-BODY_W / 2 + (HEADLIGHT_W * 1.4) / 2 + 0.1, WHEEL_R + BODY_H * 0.45, BODY_L / 2 + 0.01);
-	tl2.position.set(BODY_W / 2 - (HEADLIGHT_W * 1.4) / 2 - 0.1, WHEEL_R + BODY_H * 0.45, BODY_L / 2 + 0.01);
+	tl1.position.set(
+		-BODY_W / 2 + (HEADLIGHT_W * 1.4) / 2 + 0.1,
+		WHEEL_R + BODY_H * 0.45,
+		BODY_L / 2 + 0.01
+	);
+	tl2.position.set(
+		BODY_W / 2 - (HEADLIGHT_W * 1.4) / 2 - 0.1,
+		WHEEL_R + BODY_H * 0.45,
+		BODY_L / 2 + 0.01
+	);
 	group.add(tl1, tl2);
 
 	// 4 轮
@@ -164,20 +177,35 @@ export function buildSu7Wheel(radius: number, width: number): THREE.Group {
 	// 厚度须 > rim 轴向 1.04w：rim 是实心圆盘，辐条只有凸出其端面才可见
 	// （同 hub 1.1w 的做法），取 1.14w 凸出 0.05w/侧；深色对浅辋强对比。
 	// 直接按 group 坐标（轴沿 X）构建，故不加 rotation.z = π/2。
+	// Task 9 性能：5 根辐条同材质且随轮刚性同转，烘焙为单个合并 mesh（8 → 4 draw call/轮）。
 	const spokeInnerR = radius * 0.14; // 嵌入毂帽保证衔接无缝
 	const spokeOuterR = radius * 0.62; // 到轮辋外缘
 	const spokeLen = spokeOuterR - spokeInnerR;
 	const spokeGeo = new THREE.BoxGeometry(width * 1.14, spokeLen, radius * 0.09);
-	const spokeMat = new THREE.MeshStandardMaterial({ color: 0x2a2e35, metalness: 0.6, roughness: 0.5 });
+	const spokeMat = new THREE.MeshStandardMaterial({
+		color: 0x2a2e35,
+		metalness: 0.6,
+		roughness: 0.5,
+	});
+	const spokeParts: THREE.BufferGeometry[] = [];
 	for (let i = 0; i < 5; i++) {
 		const angle = (i * Math.PI * 2) / 5; // 均匀 72°
-		const spoke = new THREE.Mesh(spokeGeo, spokeMat);
-		spoke.name = `Wheel_procedural_spoke_${i}`;
 		// 长边初始沿 +Y，rotation.x 绕轮轴把长边转到径向 angle 处，position 同步放到径向中点
-		spoke.position.set(0, Math.cos(angle) * (spokeInnerR + spokeLen / 2), Math.sin(angle) * (spokeInnerR + spokeLen / 2));
-		spoke.rotation.x = angle;
-		group.add(spoke);
+		const m = new THREE.Matrix4()
+			.makeRotationX(angle)
+			.setPosition(
+				0,
+				Math.cos(angle) * (spokeInnerR + spokeLen / 2),
+				Math.sin(angle) * (spokeInnerR + spokeLen / 2)
+			);
+		spokeParts.push(spokeGeo.clone().applyMatrix4(m));
 	}
+	const spokes = new THREE.Mesh(
+		mergeGeometries(spokeParts, false) ?? new THREE.BufferGeometry(),
+		spokeMat
+	);
+	spokes.name = 'Wheel_procedural_spokes';
+	group.add(spokes);
 
 	return group;
 }

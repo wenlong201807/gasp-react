@@ -246,6 +246,8 @@ export class HudSystem {
 	private glowCanvas: HTMLCanvasElement;
 	private glowTexture: THREE.CanvasTexture;
 	private lastTimeOfDay: TimeOfDay | null = null;
+	/** 静态层累计重绘次数（Task 9：TC-12 断言 timeOfDay 不变时不增；getter 暴露 staticRedrawCount） */
+	private staticRedraws = 0;
 	/** 位姿插值当前值（浮动量叠加其上，不污染插值基准） */
 	private currentPos: THREE.Vector3;
 	private currentRotX: number;
@@ -323,7 +325,10 @@ export class HudSystem {
 		this.glowCanvas.height = 512;
 		this.glowTexture = new THREE.CanvasTexture(this.glowCanvas);
 		this.glowTexture.colorSpace = THREE.SRGBColorSpace;
-		this.backboardGeometry = new THREE.PlaneGeometry(PANEL_W + GLOW_PAD * 2, PANEL_H + GLOW_PAD * 2);
+		this.backboardGeometry = new THREE.PlaneGeometry(
+			PANEL_W + GLOW_PAD * 2,
+			PANEL_H + GLOW_PAD * 2
+		);
 		this.backboardMaterial = new THREE.MeshBasicMaterial({
 			map: this.glowTexture,
 			transparent: true,
@@ -349,6 +354,11 @@ export class HudSystem {
 
 		/* 7b：RTT 视口（子平面已可加入 group；克隆先取 loading 期 fallback，就绪后引擎调 refreshCar 换车） */
 		this.initCarViewport();
+	}
+
+	/** Task 9：静态层累计重绘次数（经 engine.getRenderInfo 暴露给 TC-12） */
+	get staticRedrawCount(): number {
+		return this.staticRedraws;
 	}
 
 	update(dt: number, state: DrivingState): void {
@@ -397,9 +407,14 @@ export class HudSystem {
 		this.carRT.dispose();
 		this.carPlaneGeometry.dispose();
 		this.carPlaneMaterial.dispose();
-		/* 克隆与主模型共享几何/材质（所有权在 CarSystem）：仅移除引用，不 dispose */
+		/* mini 灯光：无 GPU 资源，按与主场景灯光相同的惯例显式 dispose */
+		this.miniHemi.dispose();
+		this.miniDir.dispose();
+		/* SU7 克隆与主模型共享资源（所有权在 CarSystem）：仅移除引用；
+		   fallback 克隆独享几何/材质（userData.ownsResources 标记），须就地释放防泄漏 */
 		if (this.carClone) {
 			this.miniScene.remove(this.carClone);
+			HudSystem.disposeIfOwned(this.carClone);
 			this.carClone = null;
 		}
 		/* environment 引用自 CarSystem 的 envRT：仅解除引用，不 dispose */
@@ -422,6 +437,7 @@ export class HudSystem {
 
 	private redrawStaticLayer(tod: TimeOfDay): void {
 		this.lastTimeOfDay = tod;
+		this.staticRedraws += 1;
 		const p = PALETTES[tod];
 		const ctx = this.staticCanvas.getContext('2d');
 		if (!ctx) return;
@@ -483,7 +499,12 @@ export class HudSystem {
 	}
 
 	/** 分区框（圆角描边 + 左上角标签） */
-	private drawSection(ctx: CanvasRenderingContext2D, p: HudPalette, box: { x: number; y: number; w: number; h: number }, label: string): void {
+	private drawSection(
+		ctx: CanvasRenderingContext2D,
+		p: HudPalette,
+		box: { x: number; y: number; w: number; h: number },
+		label: string
+	): void {
 		ctx.strokeStyle = p.frame;
 		ctx.lineWidth = 2;
 		roundRectPath(ctx, box.x, box.y, box.w, box.h, 28);
@@ -707,7 +728,7 @@ export class HudSystem {
 		 * lane i 中心 frac = (2i+1)/3 - 1（0 → -2/3，1 → 0，2 → +2/3），左右边界 = 中心 ∓ 1/3
 		 */
 		const lane = state.laneIndex;
-		const laneCenterFrac = ((lane * 2 + 1) / 3) - 1;
+		const laneCenterFrac = (lane * 2 + 1) / 3 - 1;
 		const laneLeftFrac = laneCenterFrac - 1 / 3;
 		const laneRightFrac = laneCenterFrac + 1 / 3;
 
@@ -852,7 +873,14 @@ export class HudSystem {
 		if (!ctx) return;
 		ctx.clearRect(0, 0, this.glowCanvas.width, this.glowCanvas.height);
 		const pad = 36;
-		roundRectPath(ctx, pad, pad, this.glowCanvas.width - pad * 2, this.glowCanvas.height - pad * 2, 60);
+		roundRectPath(
+			ctx,
+			pad,
+			pad,
+			this.glowCanvas.width - pad * 2,
+			this.glowCanvas.height - pad * 2,
+			60
+		);
 		ctx.strokeStyle = p.glowOuter;
 		ctx.lineWidth = 26;
 		ctx.shadowColor = p.glowOuter;
@@ -923,6 +951,7 @@ export class HudSystem {
 		const next = this.deps.getCarClone();
 		if (this.carClone) {
 			this.miniScene.remove(this.carClone);
+			HudSystem.disposeIfOwned(this.carClone); // fallback 旧克隆独享资源，弃用即释放
 		}
 		this.carClone = next;
 		this.miniScene.add(next);
@@ -1009,4 +1038,24 @@ export class HudSystem {
 		this.dragging = false;
 		this.autoRotatePause = CAR_RESUME_DELAY_SEC;
 	};
+
+	/** 独享资源的克隆（userData.ownsResources=true，CarSystem 新建的 fallback）就地释放；
+	    共享克隆（SU7 clone）与主模型同源，处置权在 CarSystem，这里不动 */
+	private static disposeIfOwned(clone: THREE.Object3D): void {
+		if (!clone.userData.ownsResources) return;
+		clone.traverse((obj) => {
+			if (obj instanceof THREE.Mesh) {
+				obj.geometry?.dispose();
+				const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+				for (const mat of mats) {
+					for (const value of Object.values(mat)) {
+						if ((value as THREE.Texture | null)?.isTexture) {
+							(value as THREE.Texture).dispose();
+						}
+					}
+					mat.dispose();
+				}
+			}
+		});
+	}
 }

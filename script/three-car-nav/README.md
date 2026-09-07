@@ -1,13 +1,16 @@
 # three-car-nav · Playwright 验收集（仓库常驻）
 
 把 three-car-nav（`src/components/three-car-nav/`）历轮验收逻辑固化成的常驻 Playwright 测试集。
-主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-10 → 汇总判定表 → 全绿 `exit 0`。
+主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-12 → 汇总判定表 → 全绿 `exit 0`。
 
 ## 运行方式
 
 ```bash
 # 全量（推荐）
 node script/three-car-nav/run.mjs
+
+# 全链闸门（lint → build → 上面这套，任一失败即停）
+bash scripts/verify-three-car-nav.sh
 
 # 只跑指定用例
 node script/three-car-nav/run.mjs --only=TC01,TC04,TC06
@@ -21,7 +24,7 @@ TCN_KEEP_SERVER=1 node script/three-car-nav/run.mjs
 ```
 
 运行结束打印判定表 + 证据路径，全部通过 `exit 0`，任何 ❌ `exit 1`。
-单次全量耗时约 3.5–4.5 分钟（其中 TC-07 变道/POI 为慢用例，~55s）。
+单次全量耗时约 4.5–5.5 分钟（其中 TC-07 变道/POI ~55s、TC-12 性能采样 ~45s 为慢用例）。
 
 > 提示：不要把全量输出 pipe 给 `head` 之类的命令——管道提前关闭会 SIGPIPE 掉主进程，
 > 导致 dev server 清理（TEARDOWN）不执行。需要截取输出请先落盘再过滤。
@@ -57,6 +60,8 @@ TCN_KEEP_SERVER=1 node script/three-car-nav/run.mjs
 | TC-08 | `tests/tc08-drag.mjs` | 拖拽 | 中央小车横拖 260px → 车身取向（连通宽度）变化 ≥25px（前后裁剪归档）；相位不巧时最多重试 3 次 |
 | TC-09 | `tests/tc09-static.mjs` | 静态检查 | `pnpm lint` 与 `pnpm build` exit 0 且输出零 `error` 行 |
 | TC-10 | `tests/tc10-panel.mjs` | 控制面板 | slider/快捷键 → `speedKmh`（90 锁定值）；暂停 → `gear==='P'` + slider/快捷键 disabled（DOM）+ `distanceM` 冻结；恢复 → `'D'` + 重新推进；视角/日夜三选逐一命中 `cameraMode`/`timeOfDay` |
+| TC-11 | `tests/tc11-robustness.mjs` | 鲁棒性 | 菜单切走→切回 ×2：canvas 恒 1（切走时 0）、console 无新增非网络 error、`modelStatus` 可恢复；合成 `webglcontextlost` → `distanceM`/`fps` 冻结且 canvas 仍在；`webglcontextrestored` → 渲染恢复推进；WebGL 不可用场景为代码走查项（cases.md） |
+| TC-12 | `tests/tc12-performance.mjs` | 性能 | `getRenderInfo()` 8 次采样 `calls < 120`；fps 31×1s 采样均值 ≥ 30；timeOfDay 不变窗口 `staticRedraws` 不增（切白天活性对照 +1）；`pixelRatio === min(dpr,2)` 且 ≤ 2 |
 
 逐条的前置 / 步骤 / 通过标准 / 关联产物见 [`cases.md`](./cases.md)。
 

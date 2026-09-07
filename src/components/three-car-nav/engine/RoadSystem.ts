@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { DrivingState } from '../types';
 
 /* ------------------------------------------------------------------ */
@@ -22,6 +23,7 @@ const MEDIAN_H = 0.22;
 /* 车道线 */
 const LINE_W = 0.15; // 线宽（虚线锁定 0.15，实线同宽）
 const LINE_Y = 0.015; // 路面上标线高度（防 z-fighting）
+const GREEN_Y = MEDIAN_H + 0.001; // 隔离带绿面高度（略抬防与路缘顶面 z-fighting）
 const DASH_SEG_LEN = 3; // 虚线 3m 段
 const DASH_GAP = 6; // 6m 空
 const DASH_PER_SEG = Math.floor(SEG_LEN / (DASH_SEG_LEN + DASH_GAP)); // 7 根/列
@@ -119,7 +121,11 @@ function createSignTexture(): THREE.CanvasTexture {
 /**
  * 程序化道路：8 段 × 60m treadmill 环。
  * 每段 = 整幅沥青路面（本向 + 隔离带 + 对向）+ 车道线 + 隔离绿化带 + 路灯（InstancedMesh）+ 偶数段路牌。
- * 几何/材质全部跨段共享；CanvasTexture 路牌全场景仅一张。
+ *
+ * Task 9 性能（draw calls < 120 验收）：段内全部静态不发光内容
+ * （路面/车道线/隔离带/灌木/灯杆灯臂/路牌骨架）合并为 **1 个顶点色 mesh**，
+ * 仅路灯头发光头与路牌牌面（贴图材质）保持独立绘制——颜色/位姿与合并前逐项一致。
+ * 合并前 8 段约 118 draw calls，合并后 8×2 + 2 牌面 ≈ 18。
  */
 export class RoadSystem {
 	private root = new THREE.Group();
@@ -133,11 +139,12 @@ export class RoadSystem {
 	constructor(scene: THREE.Scene) {
 		this.root.name = 'road-system';
 
-		/* 共享几何 */
+		/* 合并源模板几何（clone 后变换上色，只作 merge 原料） */
 		const roadGeo = this.trackGeo(new THREE.PlaneGeometry(ROAD_X_MAX - ROAD_X_MIN, SEG_LEN));
 		const solidGeo = this.trackGeo(new THREE.PlaneGeometry(LINE_W, SEG_LEN));
 		const dashGeo = this.trackGeo(new THREE.PlaneGeometry(LINE_W, DASH_SEG_LEN));
 		const medianGeo = this.trackGeo(new THREE.BoxGeometry(MEDIAN_W, MEDIAN_H, SEG_LEN));
+		const greenGeo = this.trackGeo(new THREE.PlaneGeometry(MEDIAN_W, SEG_LEN));
 		const bushGeo = this.trackGeo(new THREE.IcosahedronGeometry(0.45, 1));
 		const poleGeo = this.trackGeo(new THREE.CylinderGeometry(0.09, 0.12, LAMP_POLE_H, 8));
 		const armGeo = this.trackGeo(new THREE.BoxGeometry(LAMP_ARM_LEN, 0.12, 0.18));
@@ -146,47 +153,48 @@ export class RoadSystem {
 		const signArmGeo = this.trackGeo(new THREE.BoxGeometry(SIGN_ARM_LEN, 0.14, 0.2));
 		const signFaceGeo = this.trackGeo(new THREE.PlaneGeometry(SIGN_FACE_W, SIGN_FACE_H));
 
-		/* 共享材质 */
+		/* 材质：沥青走 Standard（PBR，与合并前一致地接受 scene.environment 环境光——
+		   换 Lambert 会显著变暗，TC-04 暗色包络判定即被污染）；其余静态件合并前均为
+		   Lambert，保持 Lambert。灯头发光 + 路牌贴图独立材质。 */
 		const asphaltMat = this.trackMat(
-			new THREE.MeshStandardMaterial({ color: 0x2b2d31, roughness: 0.95, metalness: 0 })
+			new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 })
 		);
-		const whiteMat = this.trackMat(new THREE.MeshLambertMaterial({ color: 0xdadde0 }));
-		const yellowMat = this.trackMat(new THREE.MeshLambertMaterial({ color: 0xd9a318 }));
-		const medianMat = this.trackMat(new THREE.MeshLambertMaterial({ color: 0x3c423c }));
-		const medianGreenMat = this.trackMat(new THREE.MeshLambertMaterial({ color: 0x1d3a24 }));
-		const bushMat = this.trackMat(
-			new THREE.MeshLambertMaterial({ color: 0x2a5230, flatShading: true })
-		);
-		const metalMat = this.trackMat(new THREE.MeshLambertMaterial({ color: 0x494f56 }));
+		const staticMat = this.trackMat(new THREE.MeshLambertMaterial({ vertexColors: true }));
 		this.lampHeadMat = this.trackMat(new THREE.MeshBasicMaterial({ color: 0xffe2a8 }));
 		const signMat = this.trackMat(
 			new THREE.MeshBasicMaterial({ map: this.trackTex(createSignTexture()) })
 		);
 
-		/* 隔离带六面材质：顶面绿化色，侧面路缘灰（Box groups: px/nx/py/ny/pz/nz） */
-		const medianMats = [medianMat, medianMat, medianGreenMat, medianMat, medianMat, medianMat];
+		/* 顶点色取色（setHex 已按色彩管理转到工作色彩空间，直接写顶点属性即为线性值） */
+		const colors = {
+			asphalt: new THREE.Color(0x2b2d31),
+			white: new THREE.Color(0xdadde0),
+			yellow: new THREE.Color(0xd9a318),
+			median: new THREE.Color(0x3c423c),
+			medianGreen: new THREE.Color(0x1d3a24),
+			bush: new THREE.Color(0x2a5230),
+			metal: new THREE.Color(0x494f56),
+		};
 
 		const firstSegCenterZ = -TOTAL_LEN * 0.75 + SEG_LEN / 2; // -330，整环覆盖 [-360, +120]
 		for (let i = 0; i < SEG_COUNT; i++) {
 			const seg = this.buildSegment(i, {
 				roadGeo,
-				asphaltMat,
 				solidGeo,
 				dashGeo,
 				medianGeo,
-				medianMats,
+				greenGeo,
 				bushGeo,
-				bushMat,
 				poleGeo,
 				armGeo,
 				headGeo,
-				metalMat,
-				whiteMat,
-				yellowMat,
 				signPostGeo,
 				signArmGeo,
 				signFaceGeo,
+				asphaltMat,
+				staticMat,
 				signMat,
+				colors,
 			});
 			seg.position.z = firstSegCenterZ + i * SEG_LEN;
 			this.segments.push(seg);
@@ -214,9 +222,13 @@ export class RoadSystem {
 		this.lampHeadMat.color.setHex(on ? 0xffe2a8 : 0x565b60);
 	}
 
-	/** 释放全部几何/材质/纹理并从场景摘除 */
+	/** 释放全部几何/材质/纹理/实例缓冲并从场景摘除 */
 	dispose(): void {
 		this.root.removeFromParent();
+		/* InstancedMesh 的 instanceMatrix/instanceColor 是独立 GPU 缓冲（与 CitySystem 同例） */
+		this.root.traverse((obj) => {
+			if (obj instanceof THREE.InstancedMesh) obj.dispose();
+		});
 		for (const geometry of this.geometries) geometry.dispose();
 		for (const material of this.materials) material.dispose();
 		for (const texture of this.textures) texture.dispose();
@@ -230,81 +242,91 @@ export class RoadSystem {
 		index: number,
 		res: {
 			roadGeo: THREE.BufferGeometry;
-			asphaltMat: THREE.Material;
 			solidGeo: THREE.BufferGeometry;
 			dashGeo: THREE.BufferGeometry;
 			medianGeo: THREE.BufferGeometry;
-			medianMats: THREE.Material[];
+			greenGeo: THREE.BufferGeometry;
 			bushGeo: THREE.BufferGeometry;
-			bushMat: THREE.Material;
 			poleGeo: THREE.BufferGeometry;
 			armGeo: THREE.BufferGeometry;
 			headGeo: THREE.BufferGeometry;
-			metalMat: THREE.Material;
-			whiteMat: THREE.Material;
-			yellowMat: THREE.Material;
 			signPostGeo: THREE.BufferGeometry;
 			signArmGeo: THREE.BufferGeometry;
 			signFaceGeo: THREE.BufferGeometry;
+			asphaltMat: THREE.Material;
+			staticMat: THREE.Material;
 			signMat: THREE.Material;
+			colors: Record<
+				'asphalt' | 'white' | 'yellow' | 'median' | 'medianGreen' | 'bush' | 'metal',
+				THREE.Color
+			>;
 		}
 	): THREE.Group {
 		const seg = new THREE.Group();
 		seg.name = `road-seg-${index}`;
 		const half = SEG_LEN / 2;
 		const dummy = this.dummy;
+		/* 沥青（Standard）与其余静态件（Lambert）分材质合并，各自 1 draw call */
+		const asphaltParts: THREE.BufferGeometry[] = [];
+		const parts: THREE.BufferGeometry[] = [];
 
-		/* 整幅沥青路面（本向 + 隔离带占位 + 对向） */
-		const road = new THREE.Mesh(res.roadGeo, res.asphaltMat);
-		road.rotation.x = -Math.PI / 2;
-		seg.add(road);
+		/** 模板几何 → 变换（dummy 当前位姿）→ 烘顶点色 → 收进待合并列表 */
+		const pushPart = (
+			geo: THREE.BufferGeometry,
+			color: THREE.Color,
+			into: THREE.BufferGeometry[] = parts
+		): void => {
+			dummy.updateMatrix();
+			const g = geo.clone().applyMatrix4(dummy.matrix).toNonIndexed();
+			const count = g.getAttribute('position').count;
+			const arr = new Float32Array(count * 3);
+			for (let v = 0; v < count; v++) {
+				arr[v * 3] = color.r;
+				arr[v * 3 + 1] = color.g;
+				arr[v * 3 + 2] = color.b;
+			}
+			g.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+			into.push(g);
+		};
+
+		/* 整幅沥青路面（本向 + 隔离带占位 + 对向）——Standard 材质，接受环境光 */
+		dummy.position.set((ROAD_X_MIN + ROAD_X_MAX) / 2, 0, 0);
+		dummy.rotation.set(-Math.PI / 2, 0, 0);
+		dummy.scale.setScalar(1);
+		pushPart(res.roadGeo, res.colors.asphalt, asphaltParts);
 
 		/* 白色实线（两侧边线 ×2 侧道路） */
-		const whiteSolid = new THREE.InstancedMesh(res.solidGeo, res.whiteMat, SOLID_WHITE_XS.length);
-		for (let k = 0; k < SOLID_WHITE_XS.length; k++) {
-			dummy.position.set(SOLID_WHITE_XS[k], LINE_Y, 0);
+		for (const x of SOLID_WHITE_XS) {
+			dummy.position.set(x, LINE_Y, 0);
 			dummy.rotation.set(-Math.PI / 2, 0, 0);
-			dummy.scale.setScalar(1);
-			dummy.updateMatrix();
-			whiteSolid.setMatrixAt(k, dummy.matrix);
+			pushPart(res.solidGeo, res.colors.white);
 		}
-		seg.add(whiteSolid);
 
 		/* 中央双黄实线（骑隔离带绿面） */
-		const yellowSolid = new THREE.InstancedMesh(
-			res.solidGeo,
-			res.yellowMat,
-			DOUBLE_YELLOW_XS.length
-		);
-		for (let k = 0; k < DOUBLE_YELLOW_XS.length; k++) {
-			dummy.position.set(DOUBLE_YELLOW_XS[k], MEDIAN_H + 0.01, 0);
+		for (const x of DOUBLE_YELLOW_XS) {
+			dummy.position.set(x, MEDIAN_H + 0.01, 0);
 			dummy.rotation.set(-Math.PI / 2, 0, 0);
-			dummy.scale.setScalar(1);
-			dummy.updateMatrix();
-			yellowSolid.setMatrixAt(k, dummy.matrix);
+			pushPart(res.solidGeo, res.colors.yellow);
 		}
-		seg.add(yellowSolid);
 
 		/* 白色虚线（本向 + 对向车道分隔，3m 段 / 6m 空） */
-		const dash = new THREE.InstancedMesh(res.dashGeo, res.whiteMat, DASH_XS.length * DASH_PER_SEG);
-		let di = 0;
 		for (const x of DASH_XS) {
 			for (let k = 0; k < DASH_PER_SEG; k++) {
 				dummy.position.set(x, LINE_Y, -half + DASH_SEG_LEN / 2 + k * (DASH_SEG_LEN + DASH_GAP));
 				dummy.rotation.set(-Math.PI / 2, 0, 0);
-				dummy.scale.setScalar(1);
-				dummy.updateMatrix();
-				dash.setMatrixAt(di++, dummy.matrix);
+				pushPart(res.dashGeo, res.colors.white);
 			}
 		}
-		seg.add(dash);
 
-		/* 隔离绿化带：抬升路缘（顶面绿化色）+ 灌木 */
-		const median = new THREE.Mesh(res.medianGeo, res.medianMats);
-		median.position.set(MEDIAN_X, MEDIAN_H / 2, 0);
-		seg.add(median);
+		/* 隔离绿化带：灰色路缘体 + 绿色顶面（原 BoxGeometry 六面材质组的视觉等价拆分） */
+		dummy.position.set(MEDIAN_X, MEDIAN_H / 2, 0);
+		dummy.rotation.set(0, 0, 0);
+		pushPart(res.medianGeo, res.colors.median);
+		dummy.position.set(MEDIAN_X, GREEN_Y, 0);
+		dummy.rotation.set(-Math.PI / 2, 0, 0);
+		pushPart(res.greenGeo, res.colors.medianGreen);
 
-		const bush = new THREE.InstancedMesh(res.bushGeo, res.bushMat, BUSH_PER_SEG);
+		/* 灌木（种子随机与合并前同序同值，可复现） */
 		const rand = mulberry32(0x9e3779b9 ^ (index * 2654435761));
 		for (let k = 0; k < BUSH_PER_SEG; k++) {
 			const side = k % 2 === 0 ? -1 : 1;
@@ -314,50 +336,65 @@ export class RoadSystem {
 			dummy.position.set(x, MEDIAN_H + 0.3 * s, z);
 			dummy.rotation.set(0, rand() * Math.PI, 0);
 			dummy.scale.setScalar(s);
-			dummy.updateMatrix();
-			bush.setMatrixAt(k, dummy.matrix);
+			pushPart(res.bushGeo, res.colors.bush);
 		}
-		seg.add(bush);
+		dummy.scale.setScalar(1);
 
-		/* 路灯：双侧交错（本向侧 2 盏 + 对向侧 2 盏，间距 30m） */
+		/* 路灯杆/悬臂（双侧交错：本向侧 2 盏 + 对向侧 2 盏，间距 30m）——骨架并入静态体 */
 		const lamps = [
 			{ x: LAMP_X_NEAR, armDir: 1, z: -LAMP_SPACING },
 			{ x: LAMP_X_NEAR, armDir: 1, z: 0 },
 			{ x: LAMP_X_FAR, armDir: -1, z: -LAMP_SPACING / 2 },
 			{ x: LAMP_X_FAR, armDir: -1, z: LAMP_SPACING / 2 },
 		];
-		const poles = new THREE.InstancedMesh(res.poleGeo, res.metalMat, lamps.length);
-		const arms = new THREE.InstancedMesh(res.armGeo, res.metalMat, lamps.length);
-		const heads = new THREE.InstancedMesh(res.headGeo, this.lampHeadMat, lamps.length);
-		for (let k = 0; k < lamps.length; k++) {
-			const lamp = lamps[k];
+		const headMats: Array<{ x: number; y: number; z: number }> = [];
+		for (const lamp of lamps) {
+			dummy.rotation.set(0, 0, 0);
+			dummy.position.set(lamp.x, LAMP_POLE_H / 2, lamp.z);
+			pushPart(res.poleGeo, res.colors.metal);
+			dummy.position.set(lamp.x + lamp.armDir * (LAMP_ARM_LEN / 2), LAMP_POLE_H - 0.1, lamp.z);
+			pushPart(res.armGeo, res.colors.metal);
+			headMats.push({
+				x: lamp.x + lamp.armDir * LAMP_ARM_LEN,
+				y: LAMP_HEAD_Y,
+				z: lamp.z,
+			});
+		}
+
+		/* 悬臂路牌：每 240m 一块（每 4 段），立柱/横臂并入静态体，牌面朝 +Z 迎向来车 */
+		if (index % SIGN_EVERY_SEG === 0) {
+			dummy.rotation.set(0, 0, 0);
+			dummy.position.set(SIGN_POST_X, SIGN_POST_H / 2, SIGN_Z);
+			pushPart(res.signPostGeo, res.colors.metal);
+			dummy.position.set(SIGN_POST_X - SIGN_ARM_LEN / 2 + 0.2, SIGN_POST_H - 0.1, SIGN_Z);
+			pushPart(res.signArmGeo, res.colors.metal);
+			const face = new THREE.Mesh(res.signFaceGeo, res.signMat);
+			face.position.set(SIGN_POST_X - SIGN_ARM_LEN + 1.4, SIGN_POST_H - 0.9, SIGN_Z + 0.12);
+			seg.add(face);
+		}
+
+		/* 静态合并体（沥青 Standard 1 call + 其余 Lambert 1 call 承载整段路面内容） */
+		const asphaltMerged = this.trackGeo(
+			mergeGeometries(asphaltParts, false) ?? new THREE.BufferGeometry()
+		);
+		const asphaltMesh = new THREE.Mesh(asphaltMerged, res.asphaltMat);
+		asphaltMesh.name = `road-seg-asphalt-${index}`;
+		seg.add(asphaltMesh);
+		const merged = this.trackGeo(mergeGeometries(parts, false) ?? new THREE.BufferGeometry());
+		const staticMesh = new THREE.Mesh(merged, res.staticMat);
+		staticMesh.name = `road-seg-static-${index}`;
+		seg.add(staticMesh);
+
+		/* 路灯头发光体（DayNight 联动需独立材质，保持 InstancedMesh） */
+		const heads = new THREE.InstancedMesh(res.headGeo, this.lampHeadMat, headMats.length);
+		for (let k = 0; k < headMats.length; k++) {
+			dummy.position.set(headMats[k].x, headMats[k].y, headMats[k].z);
 			dummy.rotation.set(0, 0, 0);
 			dummy.scale.setScalar(1);
-
-			dummy.position.set(lamp.x, LAMP_POLE_H / 2, lamp.z);
-			dummy.updateMatrix();
-			poles.setMatrixAt(k, dummy.matrix);
-
-			dummy.position.set(lamp.x + lamp.armDir * (LAMP_ARM_LEN / 2), LAMP_POLE_H - 0.1, lamp.z);
-			dummy.updateMatrix();
-			arms.setMatrixAt(k, dummy.matrix);
-
-			dummy.position.set(lamp.x + lamp.armDir * LAMP_ARM_LEN, LAMP_HEAD_Y, lamp.z);
 			dummy.updateMatrix();
 			heads.setMatrixAt(k, dummy.matrix);
 		}
-		seg.add(poles, arms, heads);
-
-		/* 悬臂路牌：每 240m 一块（每 4 段），牌面朝 +Z 迎向本向来车 */
-		if (index % SIGN_EVERY_SEG === 0) {
-			const post = new THREE.Mesh(res.signPostGeo, res.metalMat);
-			post.position.set(SIGN_POST_X, SIGN_POST_H / 2, SIGN_Z);
-			const arm = new THREE.Mesh(res.signArmGeo, res.metalMat);
-			arm.position.set(SIGN_POST_X - SIGN_ARM_LEN / 2 + 0.2, SIGN_POST_H - 0.1, SIGN_Z);
-			const face = new THREE.Mesh(res.signFaceGeo, res.signMat);
-			face.position.set(SIGN_POST_X - SIGN_ARM_LEN + 1.4, SIGN_POST_H - 0.9, SIGN_Z + 0.12);
-			seg.add(post, arm, face);
-		}
+		seg.add(heads);
 
 		return seg;
 	}

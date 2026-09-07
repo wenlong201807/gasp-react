@@ -49,7 +49,7 @@
 	white-space: nowrap;
 }
 
-.gear[data-gear='P'] {
+.gear[data-gear="P"] {
 	border-color: #eab30866;
 	color: var(--color-warning);
 }
@@ -183,4 +183,40 @@
 	.chip {
 		transition: none;
 	}
+}
+
+/* Task 9：WebGL 不可用降级卡片（复用本面板的玻璃拟态语言，居中提示） */
+
+.webglFallback {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	z-index: 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	box-sizing: border-box;
+	padding: 32px 44px;
+	background: #0a0a0feb;
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	text-align: center;
+	user-select: none;
+}
+
+.webglFallbackTitle {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+	letter-spacing: 2px;
+	color: var(--color-text-primary);
+}
+
+.webglFallbackHint {
+	margin: 0;
+	font-size: 12px;
+	color: rgba(255, 255, 255, 0.5);
 }
