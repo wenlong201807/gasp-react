@@ -4,6 +4,7 @@ import { CameraRig } from './CameraRig';
 import { CarSystem } from './CarSystem';
 import { CitySystem } from './CitySystem';
 import { DayNightSystem } from './DayNightSystem';
+import { HudSystem } from './HudSystem';
 import { RoadSystem } from './RoadSystem';
 import { TrafficSystem } from './TrafficSystem';
 
@@ -18,8 +19,7 @@ const MAX_DT_SEC = 0.1; // 切后台回来防止 dt 跳变
 /**
  * three-car-nav 引擎。
  * 生命周期：new(container) → start() → [RAF render] → dispose()
- * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem / TrafficSystem。
- * 后续任务将接入 HudSystem。
+ * 已接入：RoadSystem / CitySystem / CameraRig / DayNightSystem / CarSystem / TrafficSystem / HudSystem(7a)。
  */
 export class ThreeCarNavEngine {
 	readonly state: DrivingState = {
@@ -47,6 +47,7 @@ export class ThreeCarNavEngine {
 	private carSystem: CarSystem;
 	private trafficSystem: TrafficSystem;
 	private dayNightSystem: DayNightSystem;
+	private hudSystem: HudSystem;
 	private cameraRig: CameraRig;
 	private clock = new THREE.Clock();
 	private running = false;
@@ -86,6 +87,9 @@ export class ThreeCarNavEngine {
 		this.trafficSystem.setLights(this.dayNightSystem.lampsOn);
 
 		this.cameraRig = new CameraRig(this.camera, this.state.cameraMode);
+
+		/* 全息 HUD：底图/时速/位姿（Task 7a）。360° RTT 小车与拖拽在 7b 接线 getHudClone */
+		this.hudSystem = new HudSystem(this.scene, this.state.cameraMode, this.state.timeOfDay);
 
 		container.appendChild(this.renderer.domElement);
 		this.resize();
@@ -129,6 +133,7 @@ export class ThreeCarNavEngine {
 		this.carSystem.dispose();
 		this.trafficSystem.dispose();
 		this.dayNightSystem.dispose();
+		this.hudSystem.dispose();
 		this.cameraRig.dispose();
 
 		this.scene.traverse((obj) => {
@@ -177,6 +182,7 @@ export class ThreeCarNavEngine {
 		this.carSystem.update(dt, this.state);
 		this.trafficSystem.update(dt, this.state); // 车流滚动并写入 state.trafficTargets
 		this.dayNightSystem.update(dt, this.state);
+		this.hudSystem.update(dt, this.state); // HUD 位姿随 cameraMode、静态层随 timeOfDay
 		this.cameraRig.update(dt, this.state); // 相机最后更新，反映当帧最新状态
 		this.emitStats();
 		this.renderer.render(this.scene, this.camera);
