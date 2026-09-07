@@ -1,0 +1,19 @@
+{
+  "stamp": "20260907061040",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-08",
+      "name": "拖拽",
+      "pass": false,
+      "note": "释放后未暂停自动旋转（宽度摆动 189/158/189）",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061040/TC-08-drag-before.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061040/TC-08-drag-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061040/TC-08-drag-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907061040/TC-08-evidence.json"
+      ],
+      "durS": 19
+    }
+  ]
+}

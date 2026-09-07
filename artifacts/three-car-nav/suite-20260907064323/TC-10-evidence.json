@@ -1,0 +1,187 @@
+{
+  "model": {
+    "status": "ready",
+    "elapsedSec": 2.81,
+    "history": [
+      [
+        "loading",
+        0
+      ],
+      [
+        "ready",
+        2.81
+      ]
+    ]
+  },
+  "trace": [
+    {
+      "step": "slider→90",
+      "ok": true,
+      "expect": {
+        "speedKmh": 90
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 50.28500000139073
+      }
+    },
+    {
+      "step": "quick30",
+      "ok": true,
+      "expect": {
+        "speedKmh": 30
+      },
+      "got": {
+        "speedKmh": 30,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 51.13999999960259
+      }
+    },
+    {
+      "step": "quick90",
+      "ok": true,
+      "expect": {
+        "speedKmh": 90
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 51.422499999403904
+      }
+    },
+    {
+      "step": "pause",
+      "ok": true,
+      "expect": {
+        "gear": "P",
+        "speedKmh": 90
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "P",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 52.252500000596
+      }
+    },
+    {
+      "step": "resume",
+      "ok": true,
+      "expect": {
+        "gear": "D",
+        "speedKmh": 90
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 52.252500000596
+      }
+    },
+    {
+      "step": "camera:驾驶位",
+      "ok": true,
+      "expect": {
+        "cameraMode": "driver"
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "driver",
+        "timeOfDay": "dusk",
+        "distanceM": 83.09000000059618
+      }
+    },
+    {
+      "step": "camera:侧方",
+      "ok": true,
+      "expect": {
+        "cameraMode": "side"
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "side",
+        "timeOfDay": "dusk",
+        "distanceM": 83.92249999940408
+      }
+    },
+    {
+      "step": "camera:追尾",
+      "ok": true,
+      "expect": {
+        "cameraMode": "chase"
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 84.754999998212
+      }
+    },
+    {
+      "step": "tod:白天",
+      "ok": true,
+      "expect": {
+        "timeOfDay": "day"
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "day",
+        "distanceM": 85.58750000000013
+      }
+    },
+    {
+      "step": "tod:夜晚",
+      "ok": true,
+      "expect": {
+        "timeOfDay": "night"
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "night",
+        "distanceM": 86.41999999880805
+      }
+    },
+    {
+      "step": "tod:黄昏",
+      "ok": true,
+      "expect": {
+        "timeOfDay": "dusk"
+      },
+      "got": {
+        "speedKmh": 90,
+        "gear": "D",
+        "cameraMode": "chase",
+        "timeOfDay": "dusk",
+        "distanceM": 89.34000000059618
+      }
+    }
+  ],
+  "distance": {
+    "paused": [
+      52.252500000596,
+      52.252500000596
+    ],
+    "resumed": [
+      59.76500000059601,
+      82.254999998212
+    ]
+  },
+  "nonNetwork": [],
+  "network": 0,
+  "pageErrors": []
+}

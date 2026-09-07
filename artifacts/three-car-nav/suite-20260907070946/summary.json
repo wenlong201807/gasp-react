@@ -1,0 +1,26 @@
+{
+  "stamp": "20260907070946",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-11",
+      "name": "鲁棒性",
+      "pass": true,
+      "note": "切走切回×2 canvas恒1且status可恢复(ready/ready), lost冻结Δd=0.0m, restored推进Δd=26.1m",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907070946/TC-11-evidence.json"
+      ],
+      "durS": 13
+    },
+    {
+      "id": "TC-12",
+      "name": "性能",
+      "pass": true,
+      "note": "calls max=104<120, fps 30s均值=60(min=60), staticRedraws 1→1稳定/切档2活, pixelRatio=1",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907070946/TC-12-evidence.json"
+      ],
+      "durS": 44.7
+    }
+  ]
+}

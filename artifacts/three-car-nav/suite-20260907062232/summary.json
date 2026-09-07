@@ -1,0 +1,128 @@
+{
+  "stamp": "20260907062232",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-01",
+      "name": "加载",
+      "pass": true,
+      "note": "canvas=1, modelStatus=ready@1.6s, 非网络error=0, fps=60",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-01-load.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-01-evidence.json"
+      ],
+      "durS": 5.1
+    },
+    {
+      "id": "TC-02",
+      "name": "车流",
+      "pass": true,
+      "note": "n1=3 n2=3 间隔1.5s 已变化",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-02-traffic.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-02-evidence.json"
+      ],
+      "durS": 5.5
+    },
+    {
+      "id": "TC-03",
+      "name": "CDN 降级",
+      "pass": true,
+      "note": "aborted=2, fallback@15.28s, 场景仍在滚动渲染, 仅网络类 error",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-03-cdn-abort-fallback.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-03-evidence.json"
+      ],
+      "durS": 19.2
+    },
+    {
+      "id": "TC-04",
+      "name": "轮位/辐条",
+      "pass": true,
+      "note": "轮拱有轮✓ 漂移<5px✓ 轮区差分/车身=4.53x✓ 辐条摆动 0.0428✓ 两个对侧侧视✓",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-04-hud360-sideA.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-04-hud360-sideB.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-04-wheels.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-04-wheel-rear.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-04-wheel-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-04-evidence.json"
+      ],
+      "durS": 30.1
+    },
+    {
+      "id": "TC-05",
+      "name": "漆面存证",
+      "pass": true,
+      "note": "四区域裁剪已归档（车头/门板/车顶/前轮拱），平均色已记录",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-05-paint-hood-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-05-paint-door-side.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-05-paint-roof-greenhouse.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-05-paint-wheel-arch.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-05-paint-full.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-05-evidence.json"
+      ],
+      "durS": 4.9
+    },
+    {
+      "id": "TC-06",
+      "name": "HUD 六块",
+      "pass": true,
+      "note": "六块齐备：①时速/②360小车/③路名导航/④车道高亮/⑤footer带/⑥雷达；footerLeft=0.0645 中部回归带=0.0007",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud-speed.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud-nav.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud-lane.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud-footer.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud-radar.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud360-sideA.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud360-sideB.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-hud-full.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-06-evidence.json"
+      ],
+      "durS": 29.8
+    },
+    {
+      "id": "TC-07",
+      "name": "变道/POI(慢)",
+      "pass": true,
+      "note": "POI 凯恒中心 剩余 772→711m；hint 4.55s；lane 1→2",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-07-nav-line-t0.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-07-nav-line-t1.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-07-lane-hint.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-07-lane-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-07-lane-poi-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-07-evidence.json"
+      ],
+      "durS": 54.4
+    },
+    {
+      "id": "TC-08",
+      "name": "拖拽",
+      "pass": true,
+      "note": "横拖 260px → yaw ≈ 2.60rad：车身宽度 103→158px（前后裁剪已归档）",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-08-drag-before.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-08-drag-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-08-drag-resume.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-08-drag-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-08-evidence.json"
+      ],
+      "durS": 8.4
+    },
+    {
+      "id": "TC-09",
+      "name": "静态检查",
+      "pass": true,
+      "note": "pnpm lint ✓（0s）· pnpm build ✓（3s）零 error",
+      "evidence": [
+        "pnpm lint → exit 0（0s）error 行 0",
+        "pnpm build → exit 0（3s）error 行 0",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907062232/TC-09-evidence.json"
+      ],
+      "durS": 3.4
+    }
+  ]
+}

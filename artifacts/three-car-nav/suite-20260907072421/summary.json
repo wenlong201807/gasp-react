@@ -1,0 +1,55 @@
+{
+  "stamp": "20260907072421",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-04",
+      "name": "轮位/辐条",
+      "pass": true,
+      "note": "轮拱有轮✓ 漂移<5px✓ 轮区差分/车身=5.92x✓ 辐条摆动 0.0343✓ 两个对侧侧视✓",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-04-hud360-sideA.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-04-hud360-sideB.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-04-wheels.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-04-wheel-rear.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-04-wheel-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-04-evidence.json"
+      ],
+      "durS": 33.8
+    },
+    {
+      "id": "TC-08",
+      "name": "拖拽",
+      "pass": true,
+      "note": "横拖 260px → yaw ≈ 2.60rad：车身宽度 189→119px（前后裁剪已归档）",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-08-drag-before.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-08-drag-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-08-drag-resume.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-08-drag-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-08-evidence.json"
+      ],
+      "durS": 10.3
+    },
+    {
+      "id": "TC-11",
+      "name": "鲁棒性",
+      "pass": true,
+      "note": "切走切回×2 canvas恒1且status可恢复(ready/ready), lost冻结Δd=0.0m, restored推进Δd=26.3m",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-11-evidence.json"
+      ],
+      "durS": 23.7
+    },
+    {
+      "id": "TC-12",
+      "name": "性能",
+      "pass": true,
+      "note": "calls max=97<120, fps 30s均值=59.9(min=59), staticRedraws 1→1稳定/切档2活, pixelRatio=1",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907072421/TC-12-evidence.json"
+      ],
+      "durS": 44.7
+    }
+  ]
+}

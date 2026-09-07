@@ -1,0 +1,28 @@
+{
+  "stamp": "20260907053940",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-01",
+      "name": "加载",
+      "pass": true,
+      "note": "canvas=1, modelStatus=ready@1.6s, 非网络error=0, fps=60",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907053940/TC-01-load.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907053940/TC-01-evidence.json"
+      ],
+      "durS": 5.6
+    },
+    {
+      "id": "TC-02",
+      "name": "车流",
+      "pass": true,
+      "note": "n1=3 n2=2 间隔1.5s 已变化",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907053940/TC-02-traffic.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907053940/TC-02-evidence.json"
+      ],
+      "durS": 6.4
+    }
+  ]
+}

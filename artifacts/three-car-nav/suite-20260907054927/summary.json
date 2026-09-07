@@ -1,0 +1,19 @@
+{
+  "stamp": "20260907054927",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-04",
+      "name": "轮位/辐条",
+      "pass": false,
+      "note": "360° 视口未在扫描窗口内捕捉到两个对侧侧视",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054927/TC-04-wheels.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054927/TC-04-wheel-rear.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054927/TC-04-wheel-front.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907054927/TC-04-evidence.json"
+      ],
+      "durS": 23
+    }
+  ]
+}

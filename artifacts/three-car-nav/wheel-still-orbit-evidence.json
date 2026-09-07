@@ -1,0 +1,43 @@
+{
+  "task": "re-verify wheel-orbit fix 490a051 (three-car-nav Task 5)",
+  "date": "2026-09-07",
+  "branch": "feat/three-car",
+  "baselineHeadAtStart": "490a051",
+  "headDuringTest": "6fb1eea (contains 490a051; another agent committed Task 7a HUD on this worktree mid-run)",
+  "fixIsLiveInServedModule": true,
+  "servedModuleCheck": {
+    "url": "http://localhost:5173/src/components/three-car-nav/engine/CarSystem.ts",
+    "line235": "if (obj instanceof THREE.Mesh && /wheel|tyre|tire/i.test(obj.name)) { this.wheels.push(obj); }",
+    "line82": "getHudClone() also gated by instanceof THREE.Mesh"
+  },
+  "cdn": "all assets HTTP 200: sm_car.gltf, sm_car_data.bin, 1k.hdr, 9x sm_car_img*.webp => modelStatus 'ready' (real SU7, not fallback)",
+  "runtimeModelFacts": {
+    "totalNodes": 39,
+    "wheelNamedNodes": [
+      { "name": "Wheel",    "type": "Object3D", "children": 2, "relToCar": [0, 0, 0],     "collected": false },
+      { "name": "Wheel001", "type": "Mesh",     "children": 0, "relToCar": [1.57, 0.36, 0], "collected": true },
+      { "name": "Wheel002", "type": "Mesh",     "children": 0, "relToCar": [-1.48, 0.36, 0], "collected": true }
+    ],
+    "collectedWheelCount": 2,
+    "collectedAreMeshes": true,
+    "collectedParent": "Wheel (Object3D, isMesh=false) => fix correctly stops rotating the parent group",
+    "wheelGeometryBBox": {
+      "Wheel001": { "geoCenterWorld": [1.2, 0.56, 0.01], "geoSize": [0.75, 0.75, 2.0] },
+      "Wheel002": { "geoCenterWorld": [-1.12, 0.56, -0.01], "geoSize": [0.76, 0.76, 2.0] }
+    },
+    "interpretation": "each Wheel00X mesh geometry spans 2.0 units along Z (across the track) while the mesh origin sits on the car centreline at the axle (z=0). The geometry is offset from the rotation axis, so rotation.x swings the tyre geometry in a circle around the axle centre line instead of spinning it in place."
+  },
+  "interventionExperiment": {
+    "action": "set wheels[].rotation.x/y/z = 0 at runtime (page reload restores), camera unchanged",
+    "rotBeforeRad": [-601.25, -601.25],
+    "result": "detached tyres lying on the road and on the trunk DISAPPEAR from those spots; rim geometry reappears near the arches",
+    "conclusion": "the displacement is caused by the rotation CarSystem.update() applies to these meshes, not by a static asset offset"
+  },
+  "visualVerdict": "FAIL - tyre(s) detached: one lying flat on the road below/beside the rear-left arch, one on the road at the front, one resting on the trunk/deck; wheel arches show only brake disc + yellow caliper (no tyre)",
+  "comparisonWithPreFixEvidence": "signature identical to artifacts/three-car-nav/crop-su7-car.png and wheel-burst-grid.png (empty arches + detached tyres); fix did not change the visible outcome",
+  "screenshots": [
+    "wheel-still-orbit-closeup.png",
+    "wheel-still-orbit-burst-grid.png (3 frames @0.8s + 1 diagnostic panel rot=0)"
+  ],
+  "verdict": "Task 5 wheel criterion NOT met => Task 5 checkboxes NOT ticked"
+}

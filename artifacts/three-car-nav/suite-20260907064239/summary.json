@@ -1,0 +1,16 @@
+{
+  "stamp": "20260907064239",
+  "allPass": true,
+  "rows": [
+    {
+      "id": "TC-10",
+      "name": "控制面板",
+      "pass": true,
+      "note": "speed 90 via slider+quick, P/D 切换含 disabled DOM 断言, 里程冻结→推进 Δ=22.5m, camera/tod 三选全中",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907064239/TC-10-evidence.json"
+      ],
+      "durS": 7.9
+    }
+  ]
+}

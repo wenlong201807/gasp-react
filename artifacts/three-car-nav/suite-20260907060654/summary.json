@@ -1,0 +1,19 @@
+{
+  "stamp": "20260907060654",
+  "allPass": false,
+  "rows": [
+    {
+      "id": "TC-08",
+      "name": "拖拽",
+      "pass": false,
+      "note": "拖拽中差分 0.0607 未显著高于基线 0.0532；释放后未暂停自动旋转（差分 0.0714）；3s 后自动旋转未恢复",
+      "evidence": [
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060654/TC-08-drag-before.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060654/TC-08-drag-after.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060654/TC-08-drag-final.png",
+        "/Users/zhuwenlong/Desktop/ai-study/gasp-react/artifacts/three-car-nav/suite-20260907060654/TC-08-evidence.json"
+      ],
+      "durS": 11.2
+    }
+  ]
+}

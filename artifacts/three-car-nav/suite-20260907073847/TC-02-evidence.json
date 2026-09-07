@@ -1,0 +1,57 @@
+{
+  "status": "fallback",
+  "s1": {
+    "modelStatus": "fallback",
+    "fps": 62,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 274.9633333345253,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -48.01354732085358
+      },
+      {
+        "relX": 3.5,
+        "relZ": 48.447304861554954
+      },
+      {
+        "relX": 10.5,
+        "relZ": -36.43096505236932
+      }
+    ]
+  },
+  "s2": {
+    "modelStatus": "fallback",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 299.9733333329356,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -48.33212318537424
+      },
+      {
+        "relX": 3.5,
+        "relZ": 49.08814003845376
+      },
+      {
+        "relX": 10.5,
+        "relZ": 15.517515947309281
+      }
+    ]
+  },
+  "nonEmpty": true,
+  "changed": true,
+  "allInRange": true,
+  "nonNetwork": []
+}

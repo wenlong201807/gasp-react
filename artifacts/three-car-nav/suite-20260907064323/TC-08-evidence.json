@@ -1,0 +1,40 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "widthBefore": 162.2,
+      "widthAfter": 189
+    }
+  ],
+  "widthsBefore": [
+    170,
+    171,
+    158
+  ],
+  "widthsAfter": [],
+  "state": {
+    "modelStatus": "ready",
+    "fps": 60,
+    "speedKmh": 60,
+    "gear": "D",
+    "cameraMode": "chase",
+    "timeOfDay": "dusk",
+    "distanceM": 143.10333333412837,
+    "laneIndex": 1,
+    "laneChangeHint": null,
+    "trafficTargets": [
+      {
+        "relX": 0,
+        "relZ": -46.333922630789914
+      },
+      {
+        "relX": 3.5,
+        "relZ": 45.0686352721307
+      },
+      {
+        "relX": 17.5,
+        "relZ": -11.080351425391
+      }
+    ]
+  }
+}
