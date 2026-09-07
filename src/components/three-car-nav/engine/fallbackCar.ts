@@ -117,6 +117,52 @@ export function buildFallbackCar(bodyColor = 0x9aa3ad): FallbackCarResult {
 	return { group, wheels };
 }
 
+/**
+ * 程序化 SU7 替换轮：橡胶胎 + 金属轮辋 + 深色毂帽三层同轴圆柱。
+ *
+ * 结构约定（用于替换损毁的「同侧双轮合并」mesh，见 CarSystem.spawnSu7）：
+ * - 每个子 mesh 自带 rotation.z = π/2（圆柱默认轴 Y → 轴向沿 X，与 fallback 轮同构）；
+ *   旋转放在子件而非 Group 上：getHudClone 的 traverse 只收 Mesh 级轮子，这样
+ *   主车转 Group.rotation.x、HUD（若转 userData.wheels）转子件 rotation.x 均为绕轮轴纯自转；
+ * - Group 本体不旋转、几何居中于原点 → 对 Group 施加 rotation.x 即绕轮轴自转；
+ * - 子件命名含 'Wheel'：/wheel|tyre|tire/i 收集天然命中。
+ *
+ * @param radius 轮半径（m，含胎） @param width 胎宽（m）
+ */
+export function buildSu7Wheel(radius: number, width: number): THREE.Group {
+	const group = new THREE.Group();
+	group.name = 'Wheel_procedural';
+
+	// 橡胶胎（外圈全径，深色哑光）
+	const tire = new THREE.Mesh(
+		new THREE.CylinderGeometry(radius, radius, width, 24),
+		new THREE.MeshStandardMaterial({ color: 0x14161a, roughness: 0.9, metalness: 0.1 })
+	);
+	tire.name = 'Wheel_procedural_tire';
+	tire.rotation.z = Math.PI / 2;
+	group.add(tire);
+
+	// 金属轮辋（浅色，略宽于胎面盖住胎侧）
+	const rim = new THREE.Mesh(
+		new THREE.CylinderGeometry(radius * 0.62, radius * 0.62, width * 1.04, 24),
+		new THREE.MeshStandardMaterial({ color: 0xd8dbe0, metalness: 0.9, roughness: 0.25 })
+	);
+	rim.name = 'Wheel_procedural_rim';
+	rim.rotation.z = Math.PI / 2;
+	group.add(rim);
+
+	// 中心毂帽（深色金属，略凸）
+	const hub = new THREE.Mesh(
+		new THREE.CylinderGeometry(radius * 0.16, radius * 0.16, width * 1.1, 16),
+		new THREE.MeshStandardMaterial({ color: 0x23262b, metalness: 0.85, roughness: 0.35 })
+	);
+	hub.name = 'Wheel_procedural_hub';
+	hub.rotation.z = Math.PI / 2;
+	group.add(hub);
+
+	return group;
+}
+
 /** 切换 fallback 车的头/尾灯发光强度（on=true 时头灯 1.4 / 尾灯 0.6） */
 export function setFallbackCarLights(group: THREE.Object3D, on: boolean): void {
 	const g = group as unknown as {
