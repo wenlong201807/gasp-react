@@ -1,0 +1,50 @@
+/* 更新提示 toast：玻璃拟态语言对齐 hud-control-panel.module.css（背景/blur/圆角/阴影） */
+
+.toast {
+	position: fixed;
+	right: 24px;
+	bottom: 24px;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	box-sizing: border-box;
+	padding: 14px 16px;
+	background: #0a0a0feb;
+	backdrop-filter: blur(20px);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-xl);
+	color: var(--color-text-primary);
+	font-size: 13px;
+}
+
+.text {
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+}
+
+.button {
+	padding: 6px 14px;
+	border: 1px solid #667eea73;
+	border-radius: var(--radius-md);
+	background: linear-gradient(135deg, #667eea38, #764ba238);
+	color: var(--color-text-primary);
+	font-size: 12px;
+	white-space: nowrap;
+	cursor: pointer;
+	transition:
+		border-color var(--transition-fast),
+		background-color var(--transition-fast);
+}
+
+.button:hover,
+.button:focus-visible {
+	border-color: #667eea;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.button {
+		transition: none;
+	}
+}
