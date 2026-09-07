@@ -123,7 +123,11 @@ export function setFallbackCarLights(group: THREE.Object3D, on: boolean): void {
 		__headlightMat?: THREE.MeshStandardMaterial;
 		__taillightMat?: THREE.MeshStandardMaterial;
 	};
-	g.__headlightMat?.emissiveIntensity && (g.__headlightMat.emissiveIntensity = on ? 1.4 : 0);
-	g.__taillightMat?.emissiveIntensity !== undefined &&
-		(g.__taillightMat.emissiveIntensity = on ? 0.6 : 0);
+	// 直接 if 赋值：初始 emissiveIntensity 为 0，`&&` 短路写法会让开灯永不生效
+	if (g.__headlightMat) {
+		g.__headlightMat.emissiveIntensity = on ? 1.4 : 0;
+	}
+	if (g.__taillightMat) {
+		g.__taillightMat.emissiveIntensity = on ? 0.6 : 0;
+	}
 }

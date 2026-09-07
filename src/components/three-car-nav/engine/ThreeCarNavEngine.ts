@@ -65,7 +65,7 @@ export class ThreeCarNavEngine {
 		this.roadSystem = new RoadSystem(this.scene);
 		this.citySystem = new CitySystem(this.scene);
 		// CarSystem 必须在 DayNightSystem 之前创建：DayNight 需要把车灯联动出口接给它
-		this.carSystem = new CarSystem(this.scene);
+		this.carSystem = new CarSystem(this.scene, this.renderer);
 		// 订阅 modelStatus 变化并回写到 engine.stats（React 端通过 onStats 拿到）
 		this.carSystem.onStatus((s) => {
 			this.stats = { ...this.stats, modelStatus: s.modelStatus };

@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js';
 import type { DrivingState } from '../types';
 import { buildFallbackCar, setFallbackCarLights } from './fallbackCar';
 
@@ -32,9 +31,11 @@ interface CarLightControllable {
  */
 export class CarSystem implements CarLightControllable {
 	private scene: THREE.Scene;
+	private renderer: THREE.WebGLRenderer;
 	private root = new THREE.Group();
 	private carGroup: THREE.Group | null = null;
-	private wheels: THREE.Mesh[] = [];
+	/** 车轮节点：真实 gltf 的轮子常是 Group 而非 Mesh */
+	private wheels: THREE.Object3D[] = [];
 	private headlightMat: THREE.MeshStandardMaterial | null = null;
 	private taillightMat: THREE.MeshStandardMaterial | null = null;
 	private fallbackMode = false;
@@ -44,9 +45,12 @@ export class CarSystem implements CarLightControllable {
 	private loaded = false;
 	private swayT = 0;
 	private lightsOn = false;
+	private envRT: THREE.WebGLRenderTarget | null = null;
+	private disposed = false;
 
-	constructor(scene: THREE.Scene) {
+	constructor(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
 		this.scene = scene;
+		this.renderer = renderer;
 		this.root.name = 'car-system';
 		this.root.position.set(0, 0, 0);
 		scene.add(this.root);
@@ -88,23 +92,14 @@ export class CarSystem implements CarLightControllable {
 			group.userData.wheels = wheels;
 			return group;
 		}
-		// SU7 加载成功：用 SkeletonUtils / clone 共享材质
+		// SU7 加载成功：clone 共享材质 / 共享几何
 		if (this.carGroup) {
 			const clone = this.carGroup.clone(true);
-			clone.traverse((obj) => {
-				if (obj instanceof THREE.Mesh) {
-					obj.castShadow = false;
-					obj.receiveShadow = false;
-					if (obj.material instanceof THREE.MeshStandardMaterial) {
-						// 共享材质即可
-					}
-				}
-			});
 			clone.scale.setScalar(HUD_CLONE_SCALE);
-			// 收集轮子引用
-			const wheels: THREE.Mesh[] = [];
+			// 收集轮子引用（轮子可能是 Mesh 或 Group 节点）
+			const wheels: THREE.Object3D[] = [];
 			clone.traverse((obj) => {
-				if (obj instanceof THREE.Mesh && /wheel|tyre|tire/i.test(obj.name)) {
+				if (/wheel|tyre|tire/i.test(obj.name)) {
 					wheels.push(obj);
 				}
 			});
@@ -123,21 +118,11 @@ export class CarSystem implements CarLightControllable {
 		if (!this.loaded) return;
 		this.swayT += dt;
 
-		// 车轮滚动：按 -speed / wheelRadius * dt 旋转（fallback 模式不滚，fallback 走独立克隆的轮引用）
-		if (this.fallbackMode) {
-			for (const w of this.wheels) {
-				// 圆柱被旋转 z=π/2 之后，原始 Y 轴变成 X 轴 → 绕 X 旋转 = 滚动
-				const speed = state.gear === 'P' ? 0 : state.speedKmh / 3.6;
-				w.rotation.x -= (speed / 0.34) * dt;
-			}
-		} else if (this.carGroup) {
-			// SU7 真实模型：traverse 名字匹配 wheel/tyre/tire
-			const speed = state.gear === 'P' ? 0 : state.speedKmh / 3.6;
-			this.carGroup.traverse((obj) => {
-				if (obj instanceof THREE.Mesh && /wheel|tyre|tire/i.test(obj.name)) {
-					obj.rotation.x -= (speed / 0.34) * dt;
-				}
-			});
+		// 车轮滚动：按 -speed / wheelRadius * dt 绕自身 x 轴旋转
+		// （fallback 圆柱被旋转 z=π/2 后原始 Y 轴变成 X 轴；SU7 轮子无论是 Mesh 还是 Group 节点同样适用）
+		const speed = state.gear === 'P' ? 0 : state.speedKmh / 3.6;
+		for (const w of this.wheels) {
+			w.rotation.x -= (speed / 0.34) * dt;
 		}
 
 		// 车道微动：yaw + 横向 sin（叠加在引擎做的车道中心 lerp 上）
@@ -149,6 +134,7 @@ export class CarSystem implements CarLightControllable {
 	}
 
 	dispose(): void {
+		this.disposed = true;
 		if (this.loadTimer) {
 			clearTimeout(this.loadTimer);
 			this.loadTimer = null;
@@ -165,6 +151,10 @@ export class CarSystem implements CarLightControllable {
 				}
 			});
 		}
+		// 释放 HDR 环境贴图（挂在 scene.environment 上，引擎的材质遍历清不到）并解除引用
+		this.envRT?.texture.dispose();
+		this.envRT = null;
+		this.scene.environment = null;
 		this.wheels = [];
 		this.carGroup = null;
 		this.listeners.clear();
@@ -184,24 +174,28 @@ export class CarSystem implements CarLightControllable {
 			}
 		}, LOAD_TIMEOUT_MS);
 
-		// HDR 环境
-		const pmrem = new THREE.PMREMGenerator(new THREE.WebGLRenderer({ antialias: false })); // 临时 renderer 仅用于 PMREM，HUD 360 子平面会复用
+		// HDR 环境：PMREM 挂主 renderer（跨 GL context 的纹理主渲染器采样不到），
+		// 产出的 envRT.texture 设为 scene.environment 后 generator 即可丢弃
+		const pmrem = new THREE.PMREMGenerator(this.renderer);
 		pmrem.compileEquirectangularShader();
 
 		const gltf = new GLTFLoader();
-		const draco = new DRACOLoader();
-		draco.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.7/');
-		gltf.setDRACOLoader(draco);
 		gltf.setMeshoptDecoder(MeshoptDecoder);
 
 		const rgh = new RGBELoader();
 		rgh.load(
 			HDR_URL,
 			(hdrTex) => {
-				pmrem.dispose();
-				const envRT = pmrem.fromEquirectangular(hdrTex);
-				this.scene.environment = envRT.texture;
+				if (this.disposed) {
+					// 引擎已销毁（如 StrictMode 双挂载）：只清本次资源，不碰已 dispose 的 renderer
+					hdrTex.dispose();
+					pmrem.dispose();
+					return;
+				}
+				this.envRT = pmrem.fromEquirectangular(hdrTex);
+				this.scene.environment = this.envRT.texture;
 				hdrTex.dispose();
+				pmrem.dispose();
 			},
 			undefined,
 			() => {
@@ -230,21 +224,20 @@ export class CarSystem implements CarLightControllable {
 
 	private spawnSu7(model: THREE.Group): void {
 		this.fallbackMode = false;
-		// 归一化：包围盒缩放到车高 1.4m 并落地 y=0
+		// 归一化：先缩放到车高 1.4m，再重算包围盒落地 y=0（顺序：缩放 → 更新矩阵 → 重取盒 → 落地）
+		const box1 = new THREE.Box3().setFromObject(model);
+		const size = box1.getSize(new THREE.Vector3());
+		if (size.y > 0) {
+			model.scale.setScalar(1.4 / size.y);
+		}
+		model.updateWorldMatrix(true, true);
 		const box2 = new THREE.Box3().setFromObject(model);
 		model.position.y = -box2.min.y;
-		// 设 envMap 反射
-		model.traverse((obj) => {
-			if (obj instanceof THREE.Mesh) {
-				if (obj.material instanceof THREE.MeshStandardMaterial) {
-					obj.material.envMap = this.scene.environment;
-				}
-			}
-		});
+		// 环境反射统一依赖 scene.environment（对所有 MeshStandardMaterial 全局生效），不逐材质赋 envMap
 
-		// 收集轮子引用
 		model.traverse((obj) => {
-			if (obj instanceof THREE.Mesh && /wheel|tyre|tire/i.test(obj.name)) {
+			// 轮子可能是 Mesh 或 Group 节点，绕自身 x 轴旋转对两者同样有效
+			if (/wheel|tyre|tire/i.test(obj.name)) {
 				this.wheels.push(obj);
 			}
 			// 找头灯/尾灯材质（启发式：含 emissive 且颜色偏暖/偏红）
