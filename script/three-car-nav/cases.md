@@ -197,6 +197,25 @@
 
 ---
 
+## TC-15 全屏入口
+
+- **前置**：P0（dev server，任一路由皆有 title 栏）。
+- **背景**：feat/fullscreen 分支将 event-loop / url-lifecycle 两页各自的全屏入口收敛为全局 title 栏（logo 旁）唯一入口，全屏目标从各页 `.experience` 容器改为 `document.documentElement`，完全沉浸（全屏态隐藏 title 栏与 dock，留角落半透明退出控件，Esc 原生退出）。两页旧按钮/handler/样式全部删除。
+- **步骤**：
+  1. 首页断言 title 栏按钮存在且 aria-label 正确（`getByRole('button', { name: '进入全屏' })` 全页唯一、位于 `header` 内）；
+  2. 点击进入全屏 → 等 600ms 读 `document.fullscreenElement` → 沉浸 DOM 断言：title 栏 logo（`GSAP-React`，exact）不可见、dock handle（`button[aria-label="展开菜单"]`）不在 DOM、角落退出控件（name `退出全屏`）出现；截图存证；
+  3. 退出恢复：真全屏路径先采 Esc 软证据（见下取舍），再进入一次走角落退出控件；stub 路径直接走控件 + 恢复原生 getter 派发 `fullscreenchange`。断言 `fullscreenElement` 归空、logo/dock 回来、退出控件消失；
+  4. 旧入口缺席（event-loop）：直链 `#/event-loop` → 点第一个 preset 卡片 → 三重缺席断言（`getByRole(name: '⛶ 全屏')`=0、`button:has-text("⛶")`=0、`button:has-text("全屏")`=0）+ title 栏新入口仍唯一在 header + 控制条「⏮ 重播」仍在（非全屏功能一字不动）；
+  5. 旧入口缺席（url-lifecycle）：直链 `#/url-lifecycle` → 点第一幕 → 同上断言组。
+- **通过标准**：上述 7 项检查全过（title 入口唯一、沉浸 DOM、退出恢复、两页旧入口缺席、非网络 console error=0、pageerror=0）。
+- **headless 取舍（不造假声明）**：
+  - **Fullscreen API 主路径**：本仓 headless Chrome（`chromium.launch({ channel: 'chrome' })`）实测 `requestFullscreen()` resolve、`fullscreenElement=documentElement`、`fullscreenchange` 触发——TC-15 主路径即真全屏断言（evidence `mode: "native"`）。若未来环境受限（点击后 `fullscreenElement` 仍 null），用例如实降级：stub `document.fullscreenElement` getter + 派发 `fullscreenchange`，断言「事件 → 状态 → DOM」UI 链路，evidence 记 `mode: "stubbed"`，不伪造真全屏。
+  - **Esc 原生退出**：headless 实测按 Esc **不退出**全屏（浏览器 UI 层快捷键在 headless 缺失，探针 `fsAfterEsc: true`）——产品代码层面 Esc 退出是浏览器对 Fullscreen API 的内置行为，无法在 headless 自动化验证。处理与 TC-14 更新流同款：采软证据（`escEffective` 如实入 evidence，不作硬断言），未生效时 `evaluate(exitFullscreen)` 自愈恢复常态后继续控件退出路径。真浏览器 Esc 行为属手工验证项。
+- **产物**：`TC-15-fullscreen-immersive.png`（沉浸态截图）、`TC-15-fullscreen-legacy-absent.png`、`TC-15-evidence.json`（六步 trace：每步 ok + 实测值 + mode + escEffective + console 分类）。
+- **实现锚点**：`src/hooks/useFullscreen.ts`（request/exit/toggle + `fullscreenchange` 同步 + 拒绝静默降级；默认 `documentElement`，可选 targetRef 保留元素级能力）；`src/components/layout/Layout.tsx`（title 旁 `fullscreenToggle` 按钮 + 沉浸分支渲染 `fullscreenExit` 角落控件）；`src/App.tsx`（`useFullscreen` 单一状态源 + 全屏态不渲染 `MenuDock`）；设计文档 `docs/superpowers/specs/2026-09-07-fullscreen-entry-design.md`。
+
+---
+
 ## 附：洞的透明性对自动化判定的影响（取舍记录）
 
 `HudSystem` 的中央洞由 RTT 子平面（alpha 0 清屏）叠加在半透明面板上，

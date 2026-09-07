@@ -1,11 +1,11 @@
-# three-car-nav 测试用例索引（TC-01..14）
+# three-car-nav 测试用例索引（TC-01..15）
 
 - 日期：2026-09-07
-- 分支：feat/menu-hash
-- 设计文档：`docs/superpowers/specs/2026-09-07-menu-hash-router-pwa-design.md`（本分支新增能力）
+- 分支：feat/menu-hash（TC-13/14）；feat/fullscreen（TC-15）
+- 设计文档：`docs/superpowers/specs/2026-09-07-menu-hash-router-pwa-design.md`（menu-hash 能力）；`docs/superpowers/specs/2026-09-07-fullscreen-entry-design.md`（全屏收敛）
 - 用例全集（前置/步骤/通过标准/产物，逐条完整版）：[`script/three-car-nav/cases.md`](../../../script/three-car-nav/cases.md)
 - 执行入口：`node script/three-car-nav/run.mjs`（自管 server 起停，产物落 `artifacts/three-car-nav/suite-<stamp>/`）
-- 最近全量实测：2026-09-07（suite-20260907125448），14/14 PASS
+- 最近全量实测：2026-09-07（feat/fullscreen 分支，suite-20260907140542），15/15 PASS
 
 ## 用例总表
 
@@ -25,8 +25,9 @@
 | TC-12 | 性能 | draw calls < 120、fps 30s 均值 ≥ 30、staticRedraws 活性、pixelRatio ≤ 2 | `cases.md` §TC-12 · `tests/tc12-performance.mjs` |
 | TC-13 | hash 路由 | 直链 / dock 点击 / 未知 id 归一 / back 四路径同构，dev 无 SW | `cases.md` §TC-13 · `tests/tc13-hash-route.mjs` |
 | TC-14 | SW 冒烟 | 生产 preview：SW 注册、app-shell-\<version\> 预缓存、toast 首装隐藏 | `cases.md` §TC-14 · `tests/tc14-sw.mjs` |
+| TC-15 | 全屏入口 | title 栏入口唯一、真全屏沉浸 DOM、两旧页入口三重缺席、退出恢复 | `cases.md` §TC-15 · `tests/tc15-fullscreen.mjs` |
 
-TC-01..12 为 three-car-nav 既有能力回归（feat/three-car 分支起累积）；TC-13/14 为 feat/menu-hash 分支新增能力，细节如下。
+TC-01..12 为 three-car-nav 既有能力回归（feat/three-car 分支起累积）；TC-13/14 为 feat/menu-hash 分支新增能力；TC-15 为 feat/fullscreen 分支新增能力，细节如下。
 
 ## TC-13 hash 路由（细节）
 
@@ -49,3 +50,11 @@ TC-01..12 为 three-car-nav 既有能力回归（feat/three-car 分支起累积�
 5. 右下角出现「发现新版本」toast → 点「立即更新」→ 新 SW 接管（controllerchange）→ 页面自动刷新一次，刷新后 toast 消失。
 
 不做自动化的原因：更新链路依赖真实的新旧 SW 交接与用户点击，Playwright 上下文里伪造 waiting/controllerchange 的注入式断言不可信，不造假。
+
+## TC-15 全屏入口（细节）
+
+七条通过标准：① title 栏（logo 旁）按钮 `getByRole('button', { name: '进入全屏' })` 全页唯一且位于 `header` 内；② 点击进入真全屏（`document.fullscreenElement === <html>`）且沉浸 DOM 三断言（title 栏 logo `GSAP-React` 不可见、dock handle 不在 DOM、角落退出控件出现）；③ 退出后布局恢复四断言（`fullscreenElement` 归空、logo/dock 回来、退出控件消失）；④⑤ event-loop / url-lifecycle 两页 stage 态旧入口三重缺席（`getByRole(name: '⛶ 全屏')`、`button:has-text("⛶")`、`button:has-text("全屏")` 全零）+ title 栏新入口仍唯一 + 控制条「⏮ 重播」仍在；⑥⑦ 非网络 console error=0、pageerror=0。
+
+headless 取舍（不造假声明，与 TC-14 更新流同款纪律）：本仓 headless Chrome 实测 Fullscreen API 完全可用 → 主路径真全屏断言（evidence `mode: "native"`）；环境受限时如实降级为 stub `fullscreenElement` + 派发 `fullscreenchange` 的 UI 链路断言（`mode: "stubbed"`）。Esc 原生退出在 headless 实测不生效（浏览器 UI 层快捷键缺失）——采软证据 `escEffective` 如实入 evidence，不作硬断言，真浏览器行为属手工验证项。
+
+实现锚点：`src/hooks/useFullscreen.ts`（收敛自两页旧实现：request/exit/toggle + `fullscreenchange` 同步 + 拒绝静默降级，默认 `documentElement`）；`src/components/layout/Layout.tsx`（title 旁切换按钮 ⤢/⤡ + 沉浸分支角落退出控件）；`src/App.tsx`（单一状态源 + 全屏态不渲染 `MenuDock`）。设计决策与旧入口删除清单见 `docs/superpowers/specs/2026-09-07-fullscreen-entry-design.md`。

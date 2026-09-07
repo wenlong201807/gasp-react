@@ -1,8 +1,8 @@
 # three-car-nav · Playwright 验收集（仓库常驻）
 
 把 three-car-nav（`src/components/three-car-nav/`）历轮验收逻辑固化成的常驻 Playwright 测试集。
-主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-14 → 汇总判定表 → 全绿 `exit 0`。
-TC-13 为 hash 路由用例（dev server）；TC-14 为 Service Worker 冒烟（生产产物 + 自管 `vite preview` 4173 起停）。
+主入口 `run.mjs`：起 dev server（用完必杀）→ 顺序执行 TC-01..TC-15 → 汇总判定表 → 全绿 `exit 0`。
+TC-13 为 hash 路由用例（dev server）；TC-14 为 Service Worker 冒烟（生产产物 + 自管 `vite preview` 4173 起停）；TC-15 为全局全屏入口收敛用例（title 栏入口 + 两旧页入口缺席，dev server）。
 
 ## 运行方式
 
@@ -65,6 +65,7 @@ TCN_KEEP_SERVER=1 node script/three-car-nav/run.mjs
 | TC-12 | `tests/tc12-performance.mjs` | 性能 | `getRenderInfo()` 8 次采样 `calls < 120`；fps 31×1s 采样均值 ≥ 30；timeOfDay 不变窗口 `staticRedraws` 不增（切白天活性对照 +1）；`pixelRatio === min(dpr,2)` 且 ≤ 2 |
 | TC-13 | `tests/tc13-hash-route.mjs` | hash 路由 | 直链 `#/three-car-nav` 即智驾页；dock 点另一项 → hash 变更 + 页面切换；`#/unknown-id` 落回智驾页（URL 归一）；`history.back()` 回上一页；dev 无 SW |
 | TC-14 | `tests/tc14-sw.mjs` | SW 冒烟 | 生产产物自动保障（`.env` 的 NODE_ENV=development 地雷 → jsxDEV 探测重建）+ preview 4173 自管起停：SW 注册且 controller 为 `/sw.js`、`app-shell-<version>` 缓存与 manifest version 一致且含 `/` 与 `/assets/*`、toast 初始隐藏、端口释放；更新流为手工验证项（cases.md） |
+| TC-15 | `tests/tc15-fullscreen.mjs` | 全屏入口 | title 栏按钮唯一且 aria-label 正确；点击 → 真全屏（`fullscreenElement=documentElement`）+ 沉浸 DOM（logo/dock 隐藏、角落退出控件出现）；环境受限时如实降级 stub `fullscreenchange` 链路断言（不造假）；event-loop / url-lifecycle 两页旧入口三重缺席（getByRole/⛶/全屏文本）且控制条非全屏功能仍在；退出后布局恢复；Esc 为软证据（headless 限制，cases.md） |
 
 逐条的前置 / 步骤 / 通过标准 / 关联产物见 [`cases.md`](./cases.md)。
 

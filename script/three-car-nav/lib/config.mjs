@@ -51,6 +51,19 @@ export const MENU = {
 	scrollMarker: 'h1:has-text("GSAP React")',
 };
 
+/** TC-15 全屏入口选择器（Layout title 栏按钮 / 沉浸态退出控件 / 旧入口特征） */
+export const FULLSCREEN = {
+	/** title 栏（logo 旁）进入全屏按钮的 aria-label */
+	enter: 'button[aria-label="进入全屏"]',
+	/** 沉浸态角落退出控件的 aria-label */
+	exit: 'button[aria-label="退出全屏"]',
+	/** title 栏 logo 文本（沉浸态应不可见；exact 防与 scroll 页 h1「GSAP React」混淆） */
+	logo: 'GSAP-React',
+	/** 旧全屏按钮特征（两页控制条，收敛后必须缺席） */
+	legacyIcon: '⛶',
+	legacyName: '⛶ 全屏',
+};
+
 /** TC-10 控制面板选择器（HudControlPanel 的 aria-label 与按钮文本） */
 export const PANEL = {
 	root: '[aria-label="智驾控制台"]',
