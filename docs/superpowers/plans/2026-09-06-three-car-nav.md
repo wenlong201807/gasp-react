@@ -167,11 +167,11 @@ export interface EngineControls {
 - Modify: ThreeCarNavPage.tsx、engine/*（按需小改）
 - Create: scripts/verify-three-car-nav.sh（由 test-engineer 按设计落盘并执行）
 
-- [ ] Step 1: 鲁棒性：WebGL 不可用（创建 renderer try/catch）→ 降级提示卡片；webglcontextlost → 暂停 RAF，restored → 恢复；dispose 审计（几何/材质/纹理/RT/renderer/事件监听全释放，React 18 StrictMode 双挂载下无泄漏无重复 canvas）
-- [ ] Step 2: 性能：pixelRatio min(dpr,2)；renderer.info.render.calls < 120（Playwright 读取断言）；HUD 静态层缓存确认；FPS 采样 30s ≥ 30
-- [ ] Step 3: test-engineer 落盘并跑 scripts/verify-three-car-nav.sh（lint → build → Playwright 全套 → 截图归档 artifacts/three-car-nav/ → FPS 报告），输出证据
+- [x] Step 1: 鲁棒性：WebGL 不可用（创建 renderer try/catch）→ 降级提示卡片；webglcontextlost → 暂停 RAF，restored → 恢复；dispose 审计（几何/材质/纹理/RT/renderer/事件监听全释放，React 18 StrictMode 双挂载下无泄漏无重复 canvas）
+- [x] Step 2: 性能：pixelRatio min(dpr,2)；renderer.info.render.calls < 120（Playwright 读取断言）；HUD 静态层缓存确认；FPS 采样 30s ≥ 30
+- [x] Step 3: test-engineer 落盘并跑 scripts/verify-three-car-nav.sh（lint → build → Playwright 全套 → 截图归档 artifacts/three-car-nav/ → FPS 报告），输出证据
 - [ ] Step 4: acceptance 子 agent 对照 spec 第 8 节验收清单逐条核对，出 ✅/❌/⚠️ 判定表
-- [ ] Step 5: commit `chore(three-car-nav): robustness, perf clamps, verify script`
+- [x] Step 5: commit `chore(three-car-nav): robustness, perf clamps, verify script`
 
 ## 派工与验收流程（主 agent 执行）
 
