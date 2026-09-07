@@ -10,11 +10,13 @@ import { ScrollAnimation } from '@/components/scroll-animation';
 import { ThreeCarNavPage } from '@/components/three-car-nav';
 import { UpdateToast } from '@/components/UpdateToast';
 import { UrlLifecyclePage } from '@/components/url-lifecycle';
+import { useFullscreen } from '@/hooks/useFullscreen';
 import { navigate, useHashRoute } from '@/hooks/useHashRoute';
 import { applyUpdate, getWaitingSW, subscribeWaitingSW } from '@/sw';
 
 function App() {
 	const route = useHashRoute();
+	const fullscreen = useFullscreen();
 	const [waitingSW, setWaitingSW] = useState<ServiceWorker | null>(getWaitingSW);
 
 	useEffect(
@@ -45,11 +47,11 @@ function App() {
 	};
 
 	return (
-		<Layout>
+		<Layout fullscreen={fullscreen}>
 			<FPSPanel />
 			<WebVitalsPanel />
 			{renderAnimation()}
-			<MenuDock currentAnimation={route} onSelect={navigate} />
+			{fullscreen.isFullscreen ? null : <MenuDock currentAnimation={route} onSelect={navigate} />}
 			{waitingSW ? <UpdateToast onApply={applyUpdate} /> : null}
 		</Layout>
 	);

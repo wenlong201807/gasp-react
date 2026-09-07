@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { URL_BAR } from './layout';
 import { CachePanel } from './CachePanel';
 import { DetailBar } from './DetailBar';
+import { URL_BAR } from './layout';
 import { NetworkStage } from './NetworkStage';
 import { RenderPipeline } from './RenderPipeline';
 import { ScenarioPicker } from './ScenarioPicker';
-import { useScenarioPlayer } from './useScenarioPlayer';
-import { STAGE } from './types';
 import type { Scenario } from './types';
+import { STAGE } from './types';
 import styles from './url-lifecycle.module.css';
+import { useScenarioPlayer } from './useScenarioPlayer';
 
 const SPEEDS = [0.5, 1, 2];
 
@@ -22,17 +22,15 @@ export function UrlLifecyclePage() {
 			</div>
 		);
 	}
-	return <UrlLifecycleStage key={scenario.id} scenario={scenario} onBack={() => setScenario(null)} />;
+	return (
+		<UrlLifecycleStage key={scenario.id} scenario={scenario} onBack={() => setScenario(null)} />
+	);
 }
 
 function UrlLifecycleStage({ scenario, onBack }: { scenario: Scenario; onBack: () => void }) {
 	const stageRef = useRef<HTMLDivElement>(null);
 	const wrapRef = useRef<HTMLDivElement>(null);
-	const fullscreenTargetRef = useRef<HTMLDivElement>(null);
 	const [scale, setScale] = useState(1);
-	const [isFullscreen, setIsFullscreen] = useState(false);
-	const [isImmersive, setIsImmersive] = useState(false);
-	const [fullscreenError, setFullscreenError] = useState<string | null>(null);
 	const player = useScenarioPlayer(scenario, stageRef);
 	const stage = scenario.stages[player.stepIndex];
 	const total = scenario.stages.length;
@@ -45,44 +43,6 @@ function UrlLifecycleStage({ scenario, onBack }: { scenario: Scenario; onBack: (
 		return () => ro.disconnect();
 	}, []);
 
-	useEffect(() => {
-		const syncFullscreen = () => {
-			const active = document.fullscreenElement === fullscreenTargetRef.current;
-			setIsFullscreen(active);
-			if (active) {
-				setIsImmersive(false);
-				setFullscreenError(null);
-			}
-		};
-		document.addEventListener('fullscreenchange', syncFullscreen);
-		return () => document.removeEventListener('fullscreenchange', syncFullscreen);
-	}, []);
-
-	const handleFullscreen = async () => {
-		const target = fullscreenTargetRef.current;
-		if (!target) return;
-		if (isImmersive) {
-			setIsImmersive(false);
-			setFullscreenError(null);
-			return;
-		}
-		if (document.fullscreenElement === target) {
-			await document.exitFullscreen();
-			return;
-		}
-		if (!target.requestFullscreen) {
-			setIsImmersive(true);
-			setFullscreenError('浏览器未允许进入全屏，已切换为沉浸模式');
-			return;
-		}
-		try {
-			await target.requestFullscreen();
-		} catch {
-			setIsImmersive(true);
-			setFullscreenError('浏览器未允许进入全屏，已切换为沉浸模式');
-		}
-	};
-
 	return (
 		<div className={styles.page}>
 			<header className={styles.header}>
@@ -91,7 +51,7 @@ function UrlLifecycleStage({ scenario, onBack }: { scenario: Scenario; onBack: (
 				</button>
 				<h2 className={styles.title}>URL 生命周期 · {scenario.title}</h2>
 			</header>
-			<div ref={fullscreenTargetRef} className={`${styles.experience} ${isImmersive ? styles.immersive : ''}`}>
+			<div className={styles.experience}>
 				<div ref={wrapRef} className={styles.stageWrap}>
 					<div
 						ref={stageRef}
@@ -100,12 +60,17 @@ function UrlLifecycleStage({ scenario, onBack }: { scenario: Scenario; onBack: (
 					>
 						<div
 							className={styles.urlBar}
-						style={{ left: URL_BAR.x, top: URL_BAR.y, width: URL_BAR.w, height: URL_BAR.h }}
+							style={{ left: URL_BAR.x, top: URL_BAR.y, width: URL_BAR.w, height: URL_BAR.h }}
 						>
 							{scenario.id === 'refresh' && <span className={styles.refreshBadge}>⌘R / F5</span>}
 							<span className={styles.urlText}>https://www.example.com/index.html</span>
 						</div>
-						<DetailBar stage={stage} index={player.stepIndex} total={total} scenarioTitle={scenario.title} />
+						<DetailBar
+							stage={stage}
+							index={player.stepIndex}
+							total={total}
+							scenarioTitle={scenario.title}
+						/>
 						<NetworkStage scenario={scenario} stage={stage} />
 						<CachePanel stage={stage} />
 						<RenderPipeline />
@@ -157,16 +122,6 @@ function UrlLifecycleStage({ scenario, onBack }: { scenario: Scenario; onBack: (
 							/>
 						))}
 					</div>
-					<button
-						type="button"
-						className={styles.btn}
-						aria-label={isFullscreen ? '退出全屏' : isImmersive ? '退出沉浸' : '进入全屏'}
-						title={isFullscreen ? '退出全屏' : isImmersive ? '退出沉浸' : '进入全屏'}
-						onClick={handleFullscreen}
-					>
-						{isFullscreen ? '⛶ 退出全屏' : isImmersive ? '⛶ 退出沉浸' : '⛶ 全屏'}
-					</button>
-					{fullscreenError && <span className={styles.fullscreenNotice} role="status">{fullscreenError}</span>}
 				</div>
 			</div>
 		</div>
