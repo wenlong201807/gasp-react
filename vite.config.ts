@@ -23,6 +23,7 @@ export default defineConfig({
 					'react-vendor': ['react', 'react-dom'],
 					'gsap-vendor': ['gsap'],
 					'lottie-vendor': ['lottie-react'],
+					'three-vendor': ['three'],
 				},
 			},
 		},
