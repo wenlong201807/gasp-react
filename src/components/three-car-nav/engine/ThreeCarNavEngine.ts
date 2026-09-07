@@ -90,6 +90,14 @@ export class ThreeCarNavEngine {
 		container.appendChild(this.renderer.domElement);
 		this.resize();
 
+		// dev 钩子：e2e 断言用（计划 Task 8 Step 2 提前落地，仅 DEV 生效）。
+		// 注意：modelStatus 不在 state 而在私有 stats，故快照按 EngineSnapshot 合并暴露
+		if (import.meta.env.DEV) {
+			window.__threeCarNav = {
+				getState: () => ({ ...this.stats, ...this.state }),
+			};
+		}
+
 		window.addEventListener('resize', this.onResize);
 	}
 
@@ -197,5 +205,12 @@ export class ThreeCarNavEngine {
 		this.camera.aspect = w / h;
 		this.camera.updateProjectionMatrix();
 		this.renderer.setSize(w, h);
+	}
+}
+
+/** e2e 断言钩子的窗口类型声明（随引擎 DEV 钩子一同生效） */
+declare global {
+	interface Window {
+		__threeCarNav?: { getState: () => EngineSnapshot };
 	}
 }
