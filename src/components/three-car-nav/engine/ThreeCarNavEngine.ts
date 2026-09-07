@@ -66,11 +66,8 @@ export class ThreeCarNavEngine {
 		this.roadSystem = new RoadSystem(this.scene);
 		this.citySystem = new CitySystem(this.scene);
 		// CarSystem 必须在 DayNightSystem 之前创建：DayNight 需要把车灯联动出口接给它
+		// （modelStatus 订阅移到 HudSystem 创建之后：ready/fallback 时要顺带通知 HUD 换车）
 		this.carSystem = new CarSystem(this.scene, this.renderer);
-		// 订阅 modelStatus 变化并回写到 engine.stats（React 端通过 onStats 拿到）
-		this.carSystem.onStatus((s) => {
-			this.stats = { ...this.stats, modelStatus: s.modelStatus };
-		});
 		this.trafficSystem = new TrafficSystem(this.scene);
 
 		/* 光照/背景/雾归 DayNightSystem 所有：构造即以 dusk 满值起步并同步路灯/窗灯/车灯联动 */
@@ -88,8 +85,29 @@ export class ThreeCarNavEngine {
 
 		this.cameraRig = new CameraRig(this.camera, this.state.cameraMode);
 
-		/* 全息 HUD：底图/时速/位姿（Task 7a）。360° RTT 小车与拖拽在 7b 接线 getHudClone */
-		this.hudSystem = new HudSystem(this.scene, this.state.cameraMode, this.state.timeOfDay);
+		/* 全息 HUD：底图/时速/位姿（7a）+ 中央 360° RTT 小车视口与拖拽（7b）。
+		   getCarClone 传 getter 而非一次性值：构造时 SU7 多半未加载完，先取 fallback 克隆，
+		   modelStatus 变 ready/fallback 时由下方订阅回调调 refreshCar() 换正式克隆 */
+		this.hudSystem = new HudSystem(
+			this.scene,
+			{
+				renderer: this.renderer,
+				camera: this.camera,
+				container,
+				getCarClone: () => this.carSystem.getHudClone(),
+			},
+			this.state.cameraMode,
+			this.state.timeOfDay
+		);
+
+		// 订阅 modelStatus 变化并回写到 engine.stats（React 端通过 onStats 拿到），
+		// 并在模型就绪/降级时通知 HUD 360° 视口换车（旧克隆只移除引用，不 dispose 共享资源）
+		this.carSystem.onStatus((s) => {
+			this.stats = { ...this.stats, modelStatus: s.modelStatus };
+			if (s.modelStatus !== 'loading') {
+				this.hudSystem.refreshCar();
+			}
+		});
 
 		container.appendChild(this.renderer.domElement);
 		this.resize();

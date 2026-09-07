@@ -33,6 +33,33 @@ const LANE_TRAP = { x: 1513, yTop: 620, yBottom: 840, wBottom: 460, wTop: 200 };
 /** 底部 y880..980：续航 · 时间（:SS 闪烁）· 信号点 + 智驾状态 */
 const FOOT_BOX = { x: 60, y: 880, w: 1928, h: 100 };
 
+/* ------------------------------------------------------------------ */
+/* 7b 锁定常量：360° RTT 小车视口（计划 Task 7 Step 3）                  */
+/* ------------------------------------------------------------------ */
+/** RTT 尺寸（锁定 512×512） */
+const CAR_RT_SIZE = 512;
+/** mini 相机 fov（锁定 32°）与环绕半径（锁定 4.5m） */
+const CAR_CAM_FOV = 32;
+const CAR_ORBIT_RADIUS = 4.5;
+/** 环绕目标高度：克隆车高 ≈1.26m（1.4 归一 × 0.9 缩放），取半高附近 */
+const CAR_TARGET_Y = 0.62;
+/** 自动旋转角速度（锁定 0.35 rad/s）与拖拽后恢复延时 */
+const CAR_AUTO_ROTATE = 0.35;
+const CAR_RESUME_DELAY_SEC = 3;
+/** 拖拽灵敏度（锁定 0.01 rad/px）与俯仰限位（锁定 ±0.5 rad） */
+const CAR_DRAG_SENSITIVITY = 0.01;
+const CAR_PITCH_LIMIT = 0.5;
+/** 洞直径 660px → 面板局部边长：/2048*4.6 与 /1024*2.3 均为 ≈1.4824m */
+const HOLE_PLANE_SIZE = ((HOLE_RADIUS * 2) / CANVAS_W) * PANEL_W;
+/** 洞心映射到面板局部坐标（canvas y 向下 → three y 向上需翻转） */
+const HOLE_LOCAL_X = ((HOLE_CENTER.x - CANVAS_W / 2) / CANVAS_W) * PANEL_W;
+const HOLE_LOCAL_Y = ((CANVAS_H / 2 - HOLE_CENTER.y) / CANVAS_H) * PANEL_H;
+/** 子平面相对面板微小后移（面板 z=0、发光背板 z=-0.02，取中间防 z-fighting） */
+const CAR_PLANE_Z = -0.01;
+/** 初始环绕角（3/4 前侧视角）与基础俯仰 */
+const CAR_INITIAL_YAW = 0.6;
+const CAR_BASE_PITCH = 0.25;
+
 /** 三档 HUD 配色（计划允许自定，要求协调：dusk 暖紫 / day 亮调 / night 深蓝调） */
 interface HudPalette {
 	/** 面板底渐变顶/底（带透明度，保留全息通透感） */
@@ -145,14 +172,28 @@ function roundRectPath(
 	ctx.closePath();
 }
 
+/** 7b 依赖注入：RTT 渲染器 / raycast 用主相机 / pointer 事件容器 / 小车克隆 getter */
+export interface HudViewportDeps {
+	renderer: THREE.WebGLRenderer;
+	camera: THREE.PerspectiveCamera;
+	container: HTMLElement;
+	/** 引擎传 `() => carSystem.getHudClone()`（getter：SU7 就绪前后取到的克隆不同） */
+	getCarClone: () => THREE.Group;
+}
+
 /**
- * 全息 HUD 系统（Task 7a：面板底图 + 时速 + 位姿）。
+ * 全息 HUD 系统（Task 7a：面板底图 + 时速 + 位姿；7b：中央 360° RTT 小车视口 + 拖拽）。
  *
  * 双层 canvas 缓存（Task 9 性能检查项）：
  * - 静态层（底渐变/分区框/标签/装饰环/静态文案）仅在 timeOfDay 变化时重绘；
  * - 动态层每帧先整幅拷贝静态层，再叠加车速数字/档位/时钟/车道图后上传纹理。
  *
- * 后续子块（勿在 7a 实现）：7b RTT 360° 小车 + 拖拽；7c 雷达目标点/POI 递减/变道 hint。
+ * 7b 360° 视口：mini Scene（hemi+dir 简灯 + 同步主场景 environment 引用）经
+ * WebGLRenderTarget(512²) 渲染，子平面嵌在面板中央洞（renderOrder 先于面板绘制，
+ * alpha 0 清屏使车体外透明、洞内装饰环可透出）；pointerdown raycast 命中子平面
+ * 进入拖拽（yaw/pitch 环绕），释放后自动旋转暂停 3s 再恢复。
+ *
+ * 后续子块（勿在 7b 实现）：7c 雷达目标点/POI 递减/变道 hint。
  */
 export class HudSystem {
 	private scene: THREE.Scene;
@@ -177,8 +218,36 @@ export class HudSystem {
 	private currentYaw: number;
 	private bobPhase = 0;
 
-	constructor(scene: THREE.Scene, initialMode: CameraMode = 'chase', initialTimeOfDay: TimeOfDay = 'dusk') {
+	/* 7b：360° RTT 小车视口（`!` 断言：均在构造器调用的 initCarViewport() 内赋值） */
+	private deps: HudViewportDeps;
+	private miniScene!: THREE.Scene;
+	private miniCamera!: THREE.PerspectiveCamera;
+	private carRT!: THREE.WebGLRenderTarget;
+	private carPlane!: THREE.Mesh;
+	private carPlaneGeometry!: THREE.PlaneGeometry;
+	private carPlaneMaterial!: THREE.MeshBasicMaterial;
+	private miniHemi!: THREE.HemisphereLight;
+	private miniDir!: THREE.DirectionalLight;
+	/** 当前展示的克隆（几何/材质与主模型共享，所有权在 CarSystem，只持引用） */
+	private carClone: THREE.Group | null = null;
+	private orbitYaw = CAR_INITIAL_YAW;
+	private orbitPitch = CAR_BASE_PITCH;
+	/** 自动旋转剩余暂停秒数（拖拽释放后置 3s） */
+	private autoRotatePause = 0;
+	private dragging = false;
+	private lastPointerX = 0;
+	private lastPointerY = 0;
+	private raycaster = new THREE.Raycaster();
+	private pointerNdc = new THREE.Vector2();
+
+	constructor(
+		scene: THREE.Scene,
+		deps: HudViewportDeps,
+		initialMode: CameraMode = 'chase',
+		initialTimeOfDay: TimeOfDay = 'dusk'
+	) {
 		this.scene = scene;
+		this.deps = deps;
 
 		this.staticCanvas = document.createElement('canvas');
 		this.staticCanvas.width = CANVAS_W;
@@ -231,6 +300,9 @@ export class HudSystem {
 		this.currentYaw = pose.yaw;
 		this.applyPose(0);
 		this.redrawStaticLayer(initialTimeOfDay);
+
+		/* 7b：RTT 视口（子平面已可加入 group；克隆先取 loading 期 fallback，就绪后引擎调 refreshCar 换车） */
+		this.initCarViewport();
 	}
 
 	update(dt: number, state: DrivingState): void {
@@ -252,9 +324,31 @@ export class HudSystem {
 		const speedFactor = Math.min(state.speedKmh / 30, 1);
 		this.bobPhase += dt * (1.2 + state.speedKmh / 45);
 		this.applyPose(Math.sin(this.bobPhase) * BOB_AMPLITUDE * speedFactor);
+
+		/* 7b：环绕推进 + RTT 渲染（引擎在 update 之后才渲染主场景，故此处先画 RT 再复位目标） */
+		this.updateCarViewport(dt);
 	}
 
 	dispose(): void {
+		/* 7b：拖拽监听逐一移除（挂载在引擎容器上） */
+		const { container } = this.deps;
+		container.removeEventListener('pointerdown', this.onPointerDown);
+		container.removeEventListener('pointermove', this.onPointerMove);
+		container.removeEventListener('pointerup', this.onPointerUp);
+		container.removeEventListener('pointercancel', this.onPointerUp);
+		/* RT 与子平面几何/材质释放（材质 map 即 rt.texture，随 RT 一并回收） */
+		this.carRT.dispose();
+		this.carPlaneGeometry.dispose();
+		this.carPlaneMaterial.dispose();
+		/* 克隆与主模型共享几何/材质（所有权在 CarSystem）：仅移除引用，不 dispose */
+		if (this.carClone) {
+			this.miniScene.remove(this.carClone);
+			this.carClone = null;
+		}
+		/* environment 引用自 CarSystem 的 envRT：仅解除引用，不 dispose */
+		this.miniScene.environment = null;
+		this.miniScene.clear();
+
 		this.scene.remove(this.group);
 		this.panelGeometry.dispose();
 		this.backboardGeometry.dispose();
@@ -581,4 +675,141 @@ export class HudSystem {
 		this.group.rotation.x = this.currentRotX;
 		this.group.rotation.y = this.currentYaw;
 	}
+
+	/* ---------------------------------------------------------------- */
+	/* 7b：中央 360° RTT 小车视口 + 拖拽环绕                               */
+	/* ---------------------------------------------------------------- */
+
+	/** 建 mini 场景/相机/RT，子平面嵌入面板中央洞，挂 pointer 拖拽监听 */
+	private initCarViewport(): void {
+		/* RT 512×512（锁定）：默认含深度缓冲；清屏 alpha 0 → 车体外透明，洞内装饰环可透出 */
+		this.carRT = new THREE.WebGLRenderTarget(CAR_RT_SIZE, CAR_RT_SIZE);
+
+		/* mini 场景：hemi+dir 简灯打底；SU7 就绪后 updateCarViewport 每帧同步主场景 environment 引用（漆面反射） */
+		this.miniScene = new THREE.Scene();
+		this.miniHemi = new THREE.HemisphereLight(0xcfd8ff, 0x22242e, 1.0);
+		this.miniDir = new THREE.DirectionalLight(0xffffff, 2.0);
+		this.miniDir.position.set(3, 5, 2);
+		this.miniScene.add(this.miniHemi, this.miniDir);
+
+		this.miniCamera = new THREE.PerspectiveCamera(CAR_CAM_FOV, 1, 0.1, 30);
+
+		/* 子平面嵌洞：局部坐标按洞心映射；renderOrder 0 → 先于面板(1)绘制，面板洞区半透明装饰叠在其上 */
+		this.carPlaneGeometry = new THREE.PlaneGeometry(HOLE_PLANE_SIZE, HOLE_PLANE_SIZE);
+		this.carPlaneMaterial = new THREE.MeshBasicMaterial({
+			map: this.carRT.texture,
+			transparent: true,
+			toneMapped: false,
+			depthWrite: false,
+		});
+		this.carPlane = new THREE.Mesh(this.carPlaneGeometry, this.carPlaneMaterial);
+		this.carPlane.position.set(HOLE_LOCAL_X, HOLE_LOCAL_Y, CAR_PLANE_Z);
+		/* 与发光背板同 renderOrder：透明队列内按深度排序，背板(z=-0.02)更远先画，子平面随后、面板最后 */
+		this.carPlane.renderOrder = 0;
+		this.group.add(this.carPlane);
+
+		/* 初始克隆（多半是 loading 期 fallback），modelStatus 就绪后由引擎调 refreshCar() 换车 */
+		this.refreshCar();
+
+		const { container } = this.deps;
+		container.addEventListener('pointerdown', this.onPointerDown);
+		container.addEventListener('pointermove', this.onPointerMove);
+		container.addEventListener('pointerup', this.onPointerUp);
+		container.addEventListener('pointercancel', this.onPointerUp);
+	}
+
+	/**
+	 * 换车：mini 场景移除旧克隆、放入新克隆。
+	 * 克隆(clone(true)/fallback 构建)与主模型共享几何与材质，所有权在 CarSystem——只动引用，绝不 dispose。
+	 */
+	refreshCar(): void {
+		const next = this.deps.getCarClone();
+		if (this.carClone) {
+			this.miniScene.remove(this.carClone);
+		}
+		this.carClone = next;
+		this.miniScene.add(next);
+	}
+
+	/** 每帧：自动旋转推进 → 环绕位姿 → RTT 渲染（先画 RT 再复位渲染目标与清屏色） */
+	private updateCarViewport(dt: number): void {
+		if (!this.dragging) {
+			if (this.autoRotatePause > 0) {
+				this.autoRotatePause -= dt;
+			} else {
+				this.orbitYaw += CAR_AUTO_ROTATE * dt;
+			}
+		}
+
+		/* HDR 就绪后同步 environment 引用（envRT 所有权在 CarSystem，这里只引用不持有） */
+		if (this.miniScene.environment !== this.scene.environment) {
+			this.miniScene.environment = this.scene.environment;
+		}
+
+		/* 环绕位姿：绕目标点 (0, CAR_TARGET_Y, 0) 半径 4.5m，pitch 即仰角 */
+		const cp = Math.cos(this.orbitPitch);
+		this.miniCamera.position.set(
+			Math.sin(this.orbitYaw) * cp * CAR_ORBIT_RADIUS,
+			CAR_TARGET_Y + Math.sin(this.orbitPitch) * CAR_ORBIT_RADIUS,
+			Math.cos(this.orbitYaw) * cp * CAR_ORBIT_RADIUS
+		);
+		this.miniCamera.lookAt(0, CAR_TARGET_Y, 0);
+
+		/* RTT：保存主 renderer 清屏状态 → alpha 0 清屏画 mini 场景 → 复位（主场景渲染随后由引擎执行） */
+		const { renderer } = this.deps;
+		const prevClearColor = renderer.getClearColor(new THREE.Color());
+		const prevClearAlpha = renderer.getClearAlpha();
+		renderer.setRenderTarget(this.carRT);
+		renderer.setClearColor(0x000000, 0);
+		renderer.render(this.miniScene, this.miniCamera);
+		renderer.setRenderTarget(null);
+		renderer.setClearColor(prevClearColor, prevClearAlpha);
+	}
+
+	/** pointerdown：主相机 raycast 命中子平面（洞内）才进入拖拽，并捕获指针保证拖出容器仍可追踪 */
+	private onPointerDown = (e: PointerEvent): void => {
+		const rect = this.deps.container.getBoundingClientRect();
+		this.pointerNdc.set(
+			((e.clientX - rect.left) / rect.width) * 2 - 1,
+			-((e.clientY - rect.top) / rect.height) * 2 + 1
+		);
+		/* 事件可能落在两帧之间，先刷新世界矩阵再射线求交 */
+		this.group.updateMatrixWorld(true);
+		this.raycaster.setFromCamera(this.pointerNdc, this.deps.camera);
+		if (this.raycaster.intersectObject(this.carPlane, false).length === 0) return;
+
+		e.preventDefault();
+		this.dragging = true;
+		this.lastPointerX = e.clientX;
+		this.lastPointerY = e.clientY;
+		const target = e.target;
+		if (target instanceof HTMLElement) {
+			try {
+				target.setPointerCapture(e.pointerId);
+			} catch {
+				/* 指针已失效等竞态下捕获失败可容忍：move/up 仍挂在容器上 */
+			}
+		}
+	};
+
+	/** pointermove：拖拽中 yaw -= dx*0.01（锁定），pitch 随 dy 并 clamp ±0.5rad */
+	private onPointerMove = (e: PointerEvent): void => {
+		if (!this.dragging) return;
+		const dx = e.clientX - this.lastPointerX;
+		const dy = e.clientY - this.lastPointerY;
+		this.lastPointerX = e.clientX;
+		this.lastPointerY = e.clientY;
+		this.orbitYaw -= dx * CAR_DRAG_SENSITIVITY;
+		this.orbitPitch = Math.max(
+			-CAR_PITCH_LIMIT,
+			Math.min(CAR_PITCH_LIMIT, this.orbitPitch + dy * CAR_DRAG_SENSITIVITY)
+		);
+	};
+
+	/** pointerup / pointercancel：释放拖拽并暂停自动旋转 3s */
+	private onPointerUp = (): void => {
+		if (!this.dragging) return;
+		this.dragging = false;
+		this.autoRotatePause = CAR_RESUME_DELAY_SEC;
+	};
 }
