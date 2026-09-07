@@ -160,6 +160,25 @@ export function buildSu7Wheel(radius: number, width: number): THREE.Group {
 	hub.rotation.z = Math.PI / 2;
 	group.add(hub);
 
+	// 5 根辐条：让 group 自转（CarSystem 对 Group.rotation.x）视觉可辨。
+	// 厚度须 > rim 轴向 1.04w：rim 是实心圆盘，辐条只有凸出其端面才可见
+	// （同 hub 1.1w 的做法），取 1.14w 凸出 0.05w/侧；深色对浅辋强对比。
+	// 直接按 group 坐标（轴沿 X）构建，故不加 rotation.z = π/2。
+	const spokeInnerR = radius * 0.14; // 嵌入毂帽保证衔接无缝
+	const spokeOuterR = radius * 0.62; // 到轮辋外缘
+	const spokeLen = spokeOuterR - spokeInnerR;
+	const spokeGeo = new THREE.BoxGeometry(width * 1.14, spokeLen, radius * 0.09);
+	const spokeMat = new THREE.MeshStandardMaterial({ color: 0x2a2e35, metalness: 0.6, roughness: 0.5 });
+	for (let i = 0; i < 5; i++) {
+		const angle = (i * Math.PI * 2) / 5; // 均匀 72°
+		const spoke = new THREE.Mesh(spokeGeo, spokeMat);
+		spoke.name = `Wheel_procedural_spoke_${i}`;
+		// 长边初始沿 +Y，rotation.x 绕轮轴把长边转到径向 angle 处，position 同步放到径向中点
+		spoke.position.set(0, Math.cos(angle) * (spokeInnerR + spokeLen / 2), Math.sin(angle) * (spokeInnerR + spokeLen / 2));
+		spoke.rotation.x = angle;
+		group.add(spoke);
+	}
+
 	return group;
 }
 
