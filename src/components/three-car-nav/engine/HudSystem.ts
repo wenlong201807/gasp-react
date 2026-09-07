@@ -32,6 +32,8 @@ const LANE_BOX = { x: 1498, y: 560, w: 490, h: 300 };
 const LANE_TRAP = { x: 1513, yTop: 620, yBottom: 840, wBottom: 460, wTop: 200 };
 /** 底部 y880..980：续航 · 时间（:SS 闪烁）· 信号点 + 智驾状态 */
 const FOOT_BOX = { x: 60, y: 880, w: 1928, h: 100 };
+/** footer 行纵向中心（y + h/2 = 930；勿写 (y + h) / 2 = 490 会叠到时速区） */
+const FOOT_CENTER_Y = FOOT_BOX.y + FOOT_BOX.h / 2;
 
 /* ------------------------------------------------------------------ */
 /* 7b 锁定常量：360° RTT 小车视口（计划 Task 7 Step 3）                  */
@@ -464,17 +466,17 @@ export class HudSystem {
 		ctx.font = "500 46px 'PingFang SC', 'Microsoft YaHei', sans-serif";
 		ctx.fillStyle = p.subtle;
 		ctx.textAlign = 'left';
-		ctx.fillText('续航 512 km', FOOT_BOX.x + 80, (FOOT_BOX.y + FOOT_BOX.h) / 2);
+		ctx.fillText('续航 512 km', FOOT_BOX.x + 80, FOOT_CENTER_Y);
 		/* 三信号点 */
 		ctx.fillStyle = p.accent;
 		for (let i = 0; i < 3; i++) {
 			ctx.beginPath();
-			ctx.arc(1462 + i * 52, (FOOT_BOX.y + FOOT_BOX.h) / 2, 11, 0, Math.PI * 2);
+			ctx.arc(1462 + i * 52, FOOT_CENTER_Y, 11, 0, Math.PI * 2);
 			ctx.fill();
 		}
 		ctx.font = "600 44px 'PingFang SC', 'Microsoft YaHei', sans-serif";
 		ctx.fillStyle = p.text;
-		ctx.fillText('NOC · 智驾已开启', 1636, (FOOT_BOX.y + FOOT_BOX.h) / 2);
+		ctx.fillText('NOC · 智驾已开启', 1636, FOOT_CENTER_Y);
 
 		/* 发光边框纹理随档位一并换色 */
 		this.paintGlowTexture(p);
@@ -613,7 +615,7 @@ export class HudSystem {
 		const pad = (n: number) => String(n).padStart(2, '0');
 		const hhmm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 		const ss = `:${pad(now.getSeconds())}`;
-		const cy = (FOOT_BOX.y + FOOT_BOX.h) / 2;
+		const cy = FOOT_CENTER_Y;
 		ctx.textBaseline = 'middle';
 		ctx.textAlign = 'center';
 		ctx.font = "bold 56px 'DIN Alternate', 'Helvetica Neue', Arial, sans-serif";
