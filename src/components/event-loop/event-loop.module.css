@@ -156,15 +156,15 @@
 
 .itemLabel {
 	position: absolute;
-	transform: translate(-50%, -50%);
+	/* 坐标与居中偏移全部并入内联 transform（合成器可接管；left/top 过渡每帧触发 Layout） */
+	left: 0;
+	top: 0;
 	font-size: 12px;
 	padding: 2px 8px;
 	border-radius: 6px;
 	background: rgba(13, 17, 23, 0.85);
 	white-space: nowrap;
-	transition:
-		left 0.25s ease,
-		top 0.25s ease;
+	transition: transform 0.25s ease;
 	animation: labelIn 0.3s ease;
 }
 

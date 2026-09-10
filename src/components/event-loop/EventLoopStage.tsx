@@ -100,7 +100,7 @@ export function EventLoopStage({ preset, onBack }: { preset: Preset; onBack: () 
 								<span
 									key={it.id}
 									className={`${styles.itemLabel} ${it.cls}`}
-									style={{ left: it.x, top: it.y }}
+									style={{ transform: `translate(${it.x}px, ${it.y}px) translate(-50%, -50%)` }}
 								>
 									{it.label}
 								</span>

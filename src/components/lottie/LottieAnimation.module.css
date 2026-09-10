@@ -39,7 +39,10 @@
 	color: #fff;
 	font-weight: 600;
 	cursor: pointer;
-	transition: all 0.3s ease;
+	/* 仅过渡可合成属性；box-shadow 悬停高亮改为瞬时出现 */
+	transition:
+		transform 0.3s ease,
+		opacity 0.3s ease;
 }
 
 .btn:hover:not(:disabled) {

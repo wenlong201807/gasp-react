@@ -75,21 +75,54 @@
 	color: inherit;
 	text-align: left;
 	cursor: pointer;
-	transition:
-		background-color 0.2s ease,
-		border-color 0.2s ease;
+	/* 伪元素定位基准；z-index:0 建立层叠上下文，让高亮层可沉到内容之下 */
+	position: relative;
+	z-index: 0;
 }
 
-.entry:hover,
-.entry:focus-visible {
+/* 高亮层：hover/active 的背景与边框统一由 opacity 过渡承担（合成器线程可接管） */
+.entry::after {
+	content: "";
+	position: absolute;
+	inset: -1px;
+	border: 1px solid transparent;
+	border-radius: inherit;
+	background: transparent;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+	pointer-events: none;
+	z-index: -2;
+}
+
+/* 左侧指示条：scaleY 伸缩（合成器线程可接管），替代原 inset box-shadow 方案 */
+.entry::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background: var(--color-primary);
+	transform: scaleY(0);
+	transition: transform 0.2s ease;
+	z-index: -1;
+}
+
+.entry:hover::after,
+.entry:focus-visible::after {
 	background: var(--color-bg-card);
 	border-color: var(--color-border);
+	opacity: 1;
 }
 
-.entryActive {
+.entryActive::after {
 	background: linear-gradient(135deg, #667eea38, #764ba238);
 	border-color: #667eea73;
-	box-shadow: inset 2px 0 0 var(--color-primary);
+	opacity: 1;
+}
+
+.entryActive::before {
+	transform: scaleY(1);
 }
 
 .entryIcon {
@@ -170,14 +203,13 @@
 	border-left: none;
 	border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 	box-shadow: var(--shadow-lg);
-	transition:
-		width 0.2s ease,
-		background 0.2s ease,
-		border-color 0.2s ease;
+	/* 宽度固定，悬停放大改走 scaleX（避免每帧 Layout） */
+	transform-origin: left center;
+	transition: transform 0.2s ease;
 }
 
 .dock[data-phase="collapsed"] .handle:hover::before {
-	width: 36px;
+	transform: scaleX(1.125);
 }
 
 .dock[data-phase="expanded"] .handle,
@@ -219,7 +251,8 @@
 @media (prefers-reduced-motion: reduce) {
 	.handle,
 	.handle::before,
-	.entry {
+	.entry::after,
+	.entry::before {
 		transition: none;
 	}
 }

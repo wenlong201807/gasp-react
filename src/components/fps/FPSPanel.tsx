@@ -54,7 +54,7 @@ export function FPSPanel() {
 						<div
 							className={styles.barFill}
 							style={{
-								width: `${Math.min((fps / 60) * 100, 100)}%`,
+								transform: `scaleX(${Math.min(fps / 60, 1)})`,
 								backgroundColor: getFPSColor(fps),
 							}}
 						/>
