@@ -13,7 +13,7 @@
 	min-width: 180px;
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 	border: 1px solid rgba(255, 255, 255, 0.1);
-	transition: all 0.3s ease;
+	/* 折叠只改 padding，不做过渡：padding 过渡每帧触发 Layout */
 }
 
 .panel.collapsed {
@@ -54,9 +54,10 @@
 .barFill {
 	height: 100%;
 	border-radius: 3px;
-	transition:
-		width 0.1s ease,
-		background-color 0.3s ease;
+	transform-origin: left center;
+	transform: scaleX(0);
+	/* 表针伸缩走 scaleX：width 过渡每帧触发 Layout，颜色随档位瞬时切换 */
+	transition: transform 0.1s ease;
 }
 
 .stats {
